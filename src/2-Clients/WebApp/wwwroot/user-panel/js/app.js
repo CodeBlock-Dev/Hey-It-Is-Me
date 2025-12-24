@@ -50,7 +50,25 @@ window.createPageWizard = {
     }
 };
 
+// Scroll to element by ID
+window.scrollToElement = function(id) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return true;
+    }
+    return false;
+};
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     window.createPageWizard.initializeWizard();
+    
+    // Handle anchor navigation after page load
+    if (window.location.hash) {
+        const hash = window.location.hash.substring(1);
+        setTimeout(function() {
+            window.scrollToElement(hash);
+        }, 300);
+    }
 });

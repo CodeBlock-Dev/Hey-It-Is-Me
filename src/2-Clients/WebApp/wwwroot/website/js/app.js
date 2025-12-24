@@ -45,6 +45,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 250);
     });
+    
+    // Handle anchor navigation after page load
+    if (window.location.hash) {
+        const hash = window.location.hash.substring(1);
+        setTimeout(function() {
+            const element = document.getElementById(hash);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 300);
+    }
 });
 
 // Index page functionality (typing animation)
