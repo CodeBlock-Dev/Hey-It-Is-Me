@@ -1,4 +1,9 @@
-﻿
+﻿@using CodeBlock.DevKit.Contracts.Services
+@using CodeBlock.DevKit.Pricing.Dtos
+@inherits ActivePlansToOrder
+@attribute [ReplaceBaseComponent]
+@inject ISettingAccessorService SettingAccessorService
+
 <section class="pricing-section" id="pricing">
     <div class="pricing-container">
         <div class="pricing-header">
@@ -7,118 +12,87 @@
         </div>
 
         <div class="pricing-plans">
-            <!-- Starter Plan -->
-            <div class="pricing-card starter-plan">
-                <div class="plan-header">
-                    <h3 class="plan-title">Starter</h3>
-                    <div class="plan-price">
-                        <span class="price-current">$5</span>
-                        <span class="price-period">/year</span>
+            @if (StarterPlanDto != null)
+            {
+                <!-- Starter Plan -->
+                <div class="pricing-card starter-plan">
+                    <div class="plan-header">
+                        <h3 class="plan-title">@StarterPlanDto.DisplayName</h3>
+                        <div class="plan-price">
+                            <span class="price-current">@($"{SettingAccessorService.Settings.Payment.Currency.Symbol}{StarterPlanDto.EffectiveRecurringPrice.Value.ToFormattedPrice()}")</span>
+                            <span class="price-period">/year</span>
+                        </div>
                     </div>
+                    <div class="plan-description">
+                        <p>@StarterPlanDto.Description</p>
+                    </div>
+                    <div class="plan-features">
+                        @((MarkupString)StarterPlanDto.Features)
+                    </div>
+                    <a href="/payment/order/plan/@StarterPlanDto.Id" class="btn btn-secondary plan-btn">Try Starter</a>
                 </div>
-                <div class="plan-description">
-                    <p>Perfect for testing our service before committing to a larger plan. Try it out to make sure it's right for you. Upgrade anytime in your dashboard.</p>
-                </div>
-                <div class="plan-features">
-                    <div class="feature-item">
-                        <span class="feature-label">Facts:</span>
-                        <span class="feature-value">3 facts</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-label">AI Images:</span>
-                        <span class="feature-value">3 images</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-label">Contacts:</span>
-                        <span class="feature-value">5 contacts</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-label">Analytics:</span>
-                        <span class="feature-value">✅</span>
-                    </div>
-                    <div class="feature-hint">
-                        <small>💡 Upgrade anytime from your dashboard</small>
-                    </div>
-                </div>
-                <a href="#" class="btn btn-secondary plan-btn">Try Starter</a>
-            </div>
+            }
 
-            <!-- Basic Plan -->
-            <div class="pricing-card basic-plan">
-                <div class="plan-header">
-                    <h3 class="plan-title">Essential</h3>
-                    <div class="plan-price">
-                        <span class="price-current">$25</span>
-                        <span class="price-period">/year</span>
+            @if (EssentialPlanDto != null)
+            {
+                <!-- Essential Plan -->
+                <div class="pricing-card basic-plan">
+                    <div class="plan-header">
+                        <h3 class="plan-title">@EssentialPlanDto.DisplayName</h3>
+                        <div class="plan-price">
+                            <span class="price-current">@($"{SettingAccessorService.Settings.Payment.Currency.Symbol}{EssentialPlanDto.EffectiveRecurringPrice.Value.ToFormattedPrice()}")</span>
+                            <span class="price-period">/year</span>
+                        </div>
                     </div>
+                    <div class="plan-description">
+                        <p>@EssentialPlanDto.Description</p>
+                    </div>
+                    <div class="plan-features">
+                        @((MarkupString)EssentialPlanDto.Features)
+                    </div>
+                    <a href="/payment/order/plan/@EssentialPlanDto.Id" class="btn btn-secondary plan-btn">Choose Essential</a>
                 </div>
-                <div class="plan-description">
-                    <p>Perfect for creating a beautiful personal fact page with all the essentials</p>
-                </div>
-                <div class="plan-features">
-                    <div class="feature-item">
-                        <span class="feature-label">Facts:</span>
-                        <span class="feature-value">20 facts</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-label">AI Images:</span>
-                        <span class="feature-value">20 images</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-label">Contacts:</span>
-                        <span class="feature-value">5 contacts</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-label">Analytics:</span>
-                        <span class="feature-value">✅</span>
-                    </div>
-                    <div class="feature-hint">
-                        <small>💡 Need more AI images? Purchase additional images in your dashboard</small>
-                    </div>
-                </div>
-                <a href="#" class="btn btn-secondary plan-btn">Choose Essential</a>
-            </div>
+            }
 
-            <!-- Premium Plan -->
-            <div class="pricing-card premium-plan">
-                <div class="plan-badge">Most Popular</div>
-                <div class="plan-header">
-                    <h3 class="plan-title">Premium</h3>
-                    <div class="plan-price">
-                        <span class="price-current">$55</span>
-                        <span class="price-period">/year</span>
+            @if (PremiumPlanDto != null)
+            {
+                <!-- Premium Plan -->
+                <div class="pricing-card premium-plan">
+                    <div class="plan-badge">Most Popular</div>
+                    <div class="plan-header">
+                        <h3 class="plan-title">@PremiumPlanDto.DisplayName</h3>
+                        <div class="plan-price">
+                            <span class="price-current">@($"{SettingAccessorService.Settings.Payment.Currency.Symbol}{PremiumPlanDto.EffectiveRecurringPrice.Value.ToFormattedPrice()}")</span>
+                            <span class="price-period">/year</span>
+                        </div>
                     </div>
+                    <div class="plan-description">
+                        <p>@PremiumPlanDto.Description</p>
+                    </div>
+                    <div class="plan-features">
+                        @((MarkupString)PremiumPlanDto.Features)
+                    </div>
+                    <a href="/payment/order/plan/@PremiumPlanDto.Id" class="btn btn-primary plan-btn">Choose Premium</a>
                 </div>
-                <div class="plan-description">
-                    <p>Everything you need to create an exceptional personal fact page that stands out</p>
-                </div>
-                <div class="plan-features">
-                    <div class="feature-item">
-                        <span class="feature-label">Facts:</span>
-                        <span class="feature-value">100 facts</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-label">AI Images:</span>
-                        <span class="feature-value">100 images</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-label">Contacts:</span>
-                        <span class="feature-value unlimited-text">Unlimited</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-label">Analytics:</span>
-                        <span class="feature-value">✅</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-label">Golden Avatar:</span>
-                        <span class="feature-value">✨ Luxury styling</span>
-                    </div>
-                    <div class="feature-hint">
-                        <small>💡 Need more AI images? Purchase additional images in your dashboard</small>
-                    </div>
-                </div>
-                <a href="#" class="btn btn-primary plan-btn">Choose Premium</a>
-            </div>
+            }
         </div>
     </div>
 </section>
+
+@code {
+    private GetPlanDto StarterPlanDto;
+    private GetPlanDto EssentialPlanDto;
+    private GetPlanDto PremiumPlanDto;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        if (base.Plans != null && base.Plans.Any())
+        {
+            StarterPlanDto = base.Plans.FirstOrDefault(p => p.SystemName == HeyItIsMe.WebApp.Helpers.Constants.STARTER_PLAN);
+            EssentialPlanDto = base.Plans.FirstOrDefault(p => p.SystemName == HeyItIsMe.WebApp.Helpers.Constants.ESSENTIAL_PLAN);
+            PremiumPlanDto = base.Plans.FirstOrDefault(p => p.SystemName == HeyItIsMe.WebApp.Helpers.Constants.PREMIUM_PLAN);
+        }
+    }
+}
