@@ -19,37 +19,31 @@
                         }
                         else if (CurrentStep == 1)
                         {
-                            <WizardRouteStep OnPrevious="PreviousStep"
-                                           OnPageCreated="HandlePageCreated" />
+                            <WizardRouteStep OnPageCreated="HandlePageCreated" />
                         }
                         else if (CurrentStep == 2)
                         {
                             <WizardDisplayNameStep PageId="@PageId"
-                                                 OnPrevious="PreviousStep"
                                                  OnNext="NextStep" />
                         }
                         else if (CurrentStep == 3)
                         {
                             <WizardAvatarStep PageId="@PageId"
-                                            OnPrevious="PreviousStep"
                                             OnNext="NextStep" />
                         }
                         else if (CurrentStep == 4)
                         {
                             <WizardReferenceImageStep PageId="@PageId"
-                                                    OnPrevious="PreviousStep"
                                                     OnNext="NextStep" />
                         }
                         else if (CurrentStep == 5)
                         {
                             <WizardContactsStep PageId="@PageId"
-                                               OnPrevious="PreviousStep"
                                                OnNext="NextStep" />
                         }
                         else if (CurrentStep == 6)
                         {
                             <WizardQuestionsStep PageId="@PageId"
-                                               OnPrevious="PreviousStep"
                                                OnComplete="NextStep" />
                         }
                         else if (CurrentStep == 7)
@@ -78,14 +72,6 @@
     private void NextStep()
     {
         CurrentStep++;
-    }
-    
-    private void PreviousStep()
-    {
-        if (CurrentStep > 0)
-        {
-            CurrentStep--;
-        }
     }
     
     private async Task HandlePageCreated((string PageId, string PageRoute) pageData)

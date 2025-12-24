@@ -33,11 +33,7 @@
             </div>
         }
         
-        <div class="d-flex justify-content-between">
-            <button class="btn btn-outline-secondary" @onclick="OnPrevious" disabled="@(CurrentQuestionIndex == 0)">
-                <i class="bi bi-arrow-left me-2"></i>Back
-            </button>
-            
+        <div class="d-flex justify-content-end">
             @if (CurrentQuestionIndex < Questions.Count() - 1)
             {
                 <button class="btn btn-primary" @onclick="HandleNextQuestion" disabled="@IsLoading">
@@ -88,7 +84,6 @@
 
 @code {
     [Parameter] public string PageId { get; set; }
-    [Parameter] public EventCallback OnPrevious { get; set; }
     [Parameter] public EventCallback OnComplete { get; set; }
     
     private IEnumerable<GetQuestionDto> Questions;
