@@ -18,9 +18,6 @@
             <i class="bi bi-info-circle me-1"></i>
             A clear, well-lit photo works best. This will be shown as your profile picture.
         </div>
-        <div class="mt-2">
-            <small class="text-muted">Debug: AvatarBase64 is @(AvatarBase64 == null ? "null" : $"set ({AvatarBase64.Length} chars)")</small>
-        </div>
     </div>
     
     <div class="d-flex justify-content-between">
@@ -58,8 +55,6 @@
     {
         try
         {
-            Console.WriteLine("OnAvatarFileSelected called");
-            
             var file = e.File;
             if (file != null)
             {
@@ -87,13 +82,11 @@
                 // Create data URL for preview
                 AvatarPreview = $"data:{file.ContentType};base64,{AvatarBase64}";
                 
-                Console.WriteLine($"File processed successfully: {AvatarBase64.Length} chars");
                 StateHasChanged();
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error processing file: {ex.Message}");
             await JSRuntime.InvokeVoidAsync("alert", $"Error uploading file: {ex.Message}");
         }
     }
