@@ -824,25 +824,6 @@ function initializePricingSection() {
         });
     }
     
-    // Handle pricing plan button clicks
-    const planButtons = document.querySelectorAll('.plan-btn');
-    planButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const planTitle = this.closest('.pricing-card').querySelector('.plan-title').textContent;
-            
-            // Add click animation
-            this.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                this.style.transform = 'scale(1)';
-            }, 150);
-            
-            // Here you would typically redirect to checkout or signup
-            // For now, we'll just show an alert
-            alert(`You selected the ${planTitle} plan! This would redirect to checkout/signup.`);
-        });
-    });
-    
     // Add hover effects to pricing cards
     const pricingCards = document.querySelectorAll('.pricing-card');
     pricingCards.forEach(card => {
