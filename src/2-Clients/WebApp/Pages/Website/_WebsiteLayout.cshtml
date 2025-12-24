@@ -1,5 +1,6 @@
 @using CodeBlock.DevKit.Contracts.Models
 @using CodeBlock.DevKit.Contracts.Services
+@using CodeBlock.DevKit.Web.Blazor.Server.Components
 @using CodeBlock.DevKit.Web.Localization
 
 @inject LocalizationSettings LocalizationSettings
@@ -10,6 +11,7 @@
 <!DOCTYPE html>
 <html dir="@LocalizationSettings.GetCurrentLanguageDirection()" lang="@LocalizationSettings.GetCurrentLanguageCode()" style="font-family: @LocalizationSettings.GetCurrentLanguageFont() !important">
 <head>
+    <component type="typeof(HeadTags)" render-mode="ServerPrerendered" />
     <link rel="icon" type="image/png" href="~/images/favicon/favicon-96x96.png sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="~/images/favicon/favicon.svg" />
     <link rel="shortcut icon" href="~/images/favicon/favicon.ico" />
@@ -18,7 +20,7 @@
     <meta name="description" content="@ApplicationSettings.Localized.Description">
     <title>@ViewData["Title"]</title>
     <base href="~/" />
-    <link href="/css/website.@(LocalizationSettings.GetCurrentLanguageDirection().ToLower()).min.css" rel="stylesheet" />
+    <link href="/css/website.@(LocalizationSettings.GetCurrentLanguageDirection().ToLower()).min.css?v=1" rel="stylesheet" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

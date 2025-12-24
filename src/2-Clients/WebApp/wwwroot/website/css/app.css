@@ -1729,6 +1729,23 @@ body.page-body {
         padding: 0.8rem 1.5rem;
     }
 
+    .starter-plan .price-current {
+        font-size: 2.5rem;
+    }
+
+    .basic-plan {
+        border-width: 2px;
+    }
+
+    .premium-plan {
+        transform: scale(1);
+        border-width: 2px;
+    }
+
+    .premium-plan:hover {
+        transform: scale(1.01) translateY(-2px);
+    }
+
     /* Recent pages section responsive */
     .recent-pages-section {
         padding: 2rem 1rem;
@@ -2094,6 +2111,23 @@ body.page-body {
     .plan-btn {
         font-size: 0.9rem;
         padding: 0.7rem 1.2rem;
+    }
+
+    .starter-plan .price-current {
+        font-size: 2rem;
+    }
+
+    .basic-plan {
+        border-width: 2px;
+    }
+
+    .premium-plan {
+        transform: scale(1);
+        border-width: 2px;
+    }
+
+    .premium-plan:hover {
+        transform: scale(1.01) translateY(-2px);
     }
 
     /* CTA Section Mobile Styles for Small Screens */
@@ -3535,10 +3569,16 @@ body.page-body {
 
 .pricing-plans {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-template-columns: 1fr;
     gap: 2rem;
-    max-width: 800px;
+    max-width: 1200px;
     margin: 0 auto;
+}
+
+@media (min-width: 992px) {
+    .pricing-plans {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 .pricing-card {
@@ -3562,13 +3602,64 @@ body.page-body {
 }
 
 .premium-plan {
-    border: 2px solid rgba(78, 205, 196, 0.3);
-    background: linear-gradient(135deg, rgba(78, 205, 196, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border: 3px solid rgba(78, 205, 196, 0.4);
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(255, 107, 107, 0.1) 50%, rgba(255, 255, 255, 0.05) 100%);
+    transform: scale(1.02);
+    box-shadow: 0 25px 50px rgba(78, 205, 196, 0.15);
 }
 
 .premium-plan:hover {
-    border-color: rgba(78, 205, 196, 0.5);
-    box-shadow: 0 30px 60px rgba(78, 205, 196, 0.2);
+    border-color: rgba(78, 205, 196, 0.6);
+    box-shadow: 0 35px 70px rgba(78, 205, 196, 0.25), 0 0 40px rgba(255, 107, 107, 0.2);
+    transform: scale(1.03) translateY(-3px);
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.2) 0%, rgba(255, 107, 107, 0.15) 50%, rgba(255, 255, 255, 0.08) 100%);
+}
+
+.premium-plan .price-current {
+    color: #4ecdc4;
+    text-shadow: 0 0 20px rgba(78, 205, 196, 0.4);
+}
+
+.starter-plan {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    opacity: 0.85;
+}
+
+.starter-plan:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    opacity: 0.95;
+}
+
+.starter-plan .price-current {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 3rem;
+}
+
+.starter-plan .plan-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.starter-plan .plan-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.starter-plan .feature-hint {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.starter-plan .feature-hint small {
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .plan-badge {
@@ -3707,18 +3798,35 @@ body.page-body {
     font-family: 'Poppins', sans-serif;
 }
 
+.basic-plan {
+    border: 2px solid rgba(78, 205, 196, 0.25);
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%);
+}
+
+.basic-plan:hover {
+    border-color: rgba(78, 205, 196, 0.4);
+    box-shadow: 0 30px 60px rgba(78, 205, 196, 0.15);
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.12) 0%, rgba(255, 255, 255, 0.07) 100%);
+}
+
+.basic-plan .price-current {
+    color: #4ecdc4;
+    text-shadow: 0 0 15px rgba(78, 205, 196, 0.3);
+}
+
 .basic-plan .plan-btn {
-    background: rgba(255, 255, 255, 0.1);
+    background: linear-gradient(45deg, rgba(78, 205, 196, 0.3), rgba(69, 183, 209, 0.3));
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(78, 205, 196, 0.5);
     backdrop-filter: blur(10px);
+    box-shadow: 0 8px 25px rgba(78, 205, 196, 0.25);
 }
 
 .basic-plan .plan-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: linear-gradient(45deg, rgba(78, 205, 196, 0.5), rgba(69, 183, 209, 0.5));
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 12px 35px rgba(78, 205, 196, 0.35);
+    border-color: rgba(78, 205, 196, 0.7);
 }
 
 .premium-plan .plan-btn {
