@@ -14,7 +14,7 @@
         <label class="form-label fw-bold">What should your page link be?</label>
         <div class="input-group">
             <span class="input-group-text">hey-it-is.me/</span>
-            <input type="text" class="form-control" @bind="PageRoute" placeholder="alex" />
+            <input type="text" class="form-control" @bind="PageRoute" @bind:event="oninput" placeholder="alex" />
         </div>
         <div class="form-text">
             <i class="bi bi-info-circle me-1"></i>
@@ -26,7 +26,7 @@
         <button class="btn btn-outline-secondary" @onclick="OnPrevious">
             <i class="bi bi-arrow-left me-2"></i>Back
         </button>
-        <button class="btn btn-primary" @onclick="HandleCreatePage" disabled="@(string.IsNullOrWhiteSpace(PageRoute) || IsLoading)">
+        <button class="btn btn-primary" @onclick="HandleCreatePage" disabled="@IsLoading">
             @if (IsLoading)
             {
                 <span class="spinner-border spinner-border-sm me-2"></span>

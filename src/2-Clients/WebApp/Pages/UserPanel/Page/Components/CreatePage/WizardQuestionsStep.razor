@@ -27,7 +27,7 @@
                 }
                 
                 <div class="form-group">
-                    <textarea class="form-control" rows="4" @bind="CurrentAnswer" 
+                    <textarea class="form-control" rows="4" @bind="CurrentAnswer" @bind:event="oninput"
                               placeholder="Share your thoughts..."></textarea>
                 </div>
             </div>
@@ -40,7 +40,7 @@
             
             @if (CurrentQuestionIndex < Questions.Count() - 1)
             {
-                <button class="btn btn-primary" @onclick="HandleNextQuestion" disabled="@(string.IsNullOrWhiteSpace(CurrentAnswer) || IsLoading)">
+                <button class="btn btn-primary" @onclick="HandleNextQuestion" disabled="@IsLoading">
                     @if (IsLoading)
                     {
                         <span class="spinner-border spinner-border-sm me-2"></span>
@@ -54,7 +54,7 @@
             }
             else
             {
-                <button class="btn btn-success" @onclick="HandleComplete" disabled="@(string.IsNullOrWhiteSpace(CurrentAnswer) || IsLoading)">
+                <button class="btn btn-success" @onclick="HandleComplete" disabled="@IsLoading">
                     @if (IsLoading)
                     {
                         <span class="spinner-border spinner-border-sm me-2"></span>

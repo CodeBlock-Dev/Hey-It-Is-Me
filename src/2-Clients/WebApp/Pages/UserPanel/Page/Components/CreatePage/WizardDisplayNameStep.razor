@@ -12,7 +12,7 @@
     
     <div class="form-group mb-4">
         <label class="form-label fw-bold">Display Name</label>
-        <input type="text" class="form-control" @bind="DisplayName" placeholder="Alex Johnson" />
+        <input type="text" class="form-control" @bind="DisplayName" @bind:event="oninput" placeholder="Alex Johnson" />
         <div class="form-text">
             <i class="bi bi-info-circle me-1"></i>
             You can use your full name, first name, nickname, or any name you prefer.
@@ -23,7 +23,7 @@
         <button class="btn btn-outline-secondary" @onclick="OnPrevious">
             <i class="bi bi-arrow-left me-2"></i>Back
         </button>
-        <button class="btn btn-primary" @onclick="HandleUpdateDisplayName" disabled="@(string.IsNullOrWhiteSpace(DisplayName) || IsLoading)">
+        <button class="btn btn-primary" @onclick="HandleUpdateDisplayName" disabled="@IsLoading">
             @if (IsLoading)
             {
                 <span class="spinner-border spinner-border-sm me-2"></span>

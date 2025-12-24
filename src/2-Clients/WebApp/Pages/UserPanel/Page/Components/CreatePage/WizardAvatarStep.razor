@@ -24,7 +24,7 @@
         <button class="btn btn-outline-secondary" @onclick="OnPrevious">
             <i class="bi bi-arrow-left me-2"></i>Back
         </button>
-        <button class="btn btn-primary" @onclick="HandleUpdateAvatar" disabled="@(AvatarBase64 == null || IsLoading)">
+        <button class="btn btn-primary" @onclick="HandleUpdateAvatar" disabled="@IsLoading">
             @if (IsLoading)
             {
                 <span class="spinner-border spinner-border-sm me-2"></span>

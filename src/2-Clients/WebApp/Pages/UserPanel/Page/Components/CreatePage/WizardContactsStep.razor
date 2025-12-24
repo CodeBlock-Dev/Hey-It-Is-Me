@@ -13,7 +13,7 @@
                 var index = i;
                 <div class="contact-item mb-3">
                     <div class="input-group">
-                        <input type="text" class="form-control" @bind="Contacts[index]" placeholder="https://linkedin.com/in/yourname" />
+                        <input type="text" class="form-control" @bind="Contacts[index]" @bind:event="oninput" placeholder="https://linkedin.com/in/yourname" />
                         @if (Contacts.Count > 1)
                         {
                             <button class="btn btn-outline-danger" type="button" @onclick="() => RemoveContact(index)">
