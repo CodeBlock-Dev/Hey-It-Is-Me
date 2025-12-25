@@ -2,6 +2,7 @@
 @using HeyItIsMe.Application.Services.Facts
 @using HeyItIsMe.Application.Services.PageVisits
 @using HeyItIsMe.Application.Services.Pages
+@using HeyItIsMe.Application.Services.Questions
 @using HeyItIsMe.Core.Resources
 @using CodeBlock.DevKit.Clients.WebApp.Resources
 @using CodeBlock.DevKit.Web.Blazor.Server.Services
@@ -34,6 +35,9 @@
 @using CodeBlock.DevKit.Web.Localization
 @using CodeBlock.DevKit.Web.Blazor.Server.Attributes
 @using HeyItIsMe.WebApp.Pages.UserPanel.Dashboard.Components
+@using HeyItIsMe.Application.Dtos.Contacts
+@using HeyItIsMe.Application.Dtos.Pages
+@using HeyItIsMe.Application.Dtos.Questions
 
 @inject IStringLocalizer<WebAppResource> WebAppLocalizer
 @inject IStringLocalizer<WebAppClientResource> WebAppClientLocalizer
@@ -48,3 +52,4 @@
 @inject IFactService FactService
 @inject IContactService ContactService
 @inject IPageVisitService PageVisitService
+@inject IQuestionService QuestionService

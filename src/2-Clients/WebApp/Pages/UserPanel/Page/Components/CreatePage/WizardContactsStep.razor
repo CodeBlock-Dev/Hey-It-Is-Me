@@ -50,10 +50,6 @@
     </div>
 </div>
 
-@using HeyItIsMe.Application.Services.Contacts
-@using HeyItIsMe.Application.Dtos.Contacts
-@inject IContactService ContactService
-@inject IJSRuntime JSRuntime
 
 @code {
     [Parameter] public string PageId { get; set; }
@@ -81,34 +77,25 @@
             return;
             
         IsLoading = true;
-        try
+        var validContacts = Contacts.Where(c => !string.IsNullOrWhiteSpace(c)).ToList();
+        
+        foreach (var contact in validContacts)
         {
-            var validContacts = Contacts.Where(c => !string.IsNullOrWhiteSpace(c)).ToList();
+            var result = await ContactService.AddContact(new AddContactDto 
+            { 
+                PageId = PageId, 
+                Content = contact 
+            });
             
-            foreach (var contact in validContacts)
+            if (!result.IsSuccess)
             {
-                var result = await ContactService.AddContact(new AddContactDto 
-                { 
-                    PageId = PageId, 
-                    Content = contact 
-                });
-                
-                if (!result.IsSuccess)
-                {
-                    await JSRuntime.InvokeVoidAsync("alert", "Error adding contact: " + string.Join(", ", result.Errors));
-                    return;
-                }
+                result.ShowErrorToast(ToastService);
+                IsLoading = false;
+                return;
             }
-            
-            await OnNext.InvokeAsync();
         }
-        catch (Exception ex)
-        {
-            await JSRuntime.InvokeVoidAsync("alert", "Error: " + ex.Message);
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        
+        await OnNext.InvokeAsync();
+        IsLoading = false;
     }
 }

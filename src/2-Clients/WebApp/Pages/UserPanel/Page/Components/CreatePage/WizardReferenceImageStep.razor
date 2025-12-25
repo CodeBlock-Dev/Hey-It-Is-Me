@@ -1,3 +1,4 @@
+
 <div class="wizard-step">
     <div class="text-center mb-4">
         <i class="bi bi-image text-primary" style="font-size: 2.5rem;"></i>
@@ -35,9 +36,6 @@
     </div>
 </div>
 
-@using HeyItIsMe.Application.Services.Pages
-@inject IPageService PageService
-@inject IJSRuntime JSRuntime
 
 @code {
     [Parameter] public string PageId { get; set; }
@@ -49,41 +47,32 @@
     
     private async Task OnReferenceFileSelected(InputFileChangeEventArgs e)
     {
-        try
+        var file = e.File;
+        if (file != null)
         {
-            var file = e.File;
-            if (file != null)
+            // Validate file size (max 10MB)
+            if (file.Size > 10 * 1024 * 1024)
             {
-                // Validate file size (max 10MB)
-                if (file.Size > 10 * 1024 * 1024)
-                {
-                    await JSRuntime.InvokeVoidAsync("alert", "File size must be less than 10MB.");
-                    return;
-                }
-
-                // Validate file type
-                if (!file.ContentType.StartsWith("image/"))
-                {
-                    await JSRuntime.InvokeVoidAsync("alert", "Please select an image file.");
-                    return;
-                }
-
-                // Convert to base64
-                using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
-                using var memoryStream = new MemoryStream();
-                await stream.CopyToAsync(memoryStream);
-                var imageBytes = memoryStream.ToArray();
-                ReferenceBase64 = Convert.ToBase64String(imageBytes);
-                
-                // Create data URL for preview
-                ReferencePreview = $"data:{file.ContentType};base64,{ReferenceBase64}";
-                
-                StateHasChanged();
+                return;
             }
-        }
-        catch (Exception ex)
-        {
-            await JSRuntime.InvokeVoidAsync("alert", $"Error uploading file: {ex.Message}");
+
+            // Validate file type
+            if (!file.ContentType.StartsWith("image/"))
+            {
+                return;
+            }
+
+            // Convert to base64
+            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            var imageBytes = memoryStream.ToArray();
+            ReferenceBase64 = Convert.ToBase64String(imageBytes);
+            
+            // Create data URL for preview
+            ReferencePreview = $"data:{file.ContentType};base64,{ReferenceBase64}";
+            
+            StateHasChanged();
         }
     }
     
@@ -94,25 +83,15 @@
             return;
             
         IsLoading = true;
-        try
+        var result = await PageService.UpdatePageReferenceImage(PageId, ReferenceBase64);
+        if (result.IsSuccess)
         {
-            var result = await PageService.UpdatePageReferenceImage(PageId, ReferenceBase64);
-            if (result.IsSuccess)
-            {
-                await OnNext.InvokeAsync();
-            }
-            else
-            {
-                await JSRuntime.InvokeVoidAsync("alert", "Error updating reference image: " + string.Join(", ", result.Errors));
-            }
+            await OnNext.InvokeAsync();
         }
-        catch (Exception ex)
+        else
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Error: " + ex.Message);
+            result.ShowErrorToast(ToastService);
         }
-        finally
-        {
-            IsLoading = false;
-        }
+        IsLoading = false;
     }
 }

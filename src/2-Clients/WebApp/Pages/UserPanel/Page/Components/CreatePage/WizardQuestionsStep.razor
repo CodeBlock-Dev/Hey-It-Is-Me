@@ -75,12 +75,6 @@
     }
 </div>
 
-@using HeyItIsMe.Application.Dtos.Questions
-@using HeyItIsMe.Application.Services.Questions
-@using HeyItIsMe.Application.Services.Facts
-@inject IQuestionService QuestionService
-@inject IFactService FactService
-@inject IJSRuntime JSRuntime
 
 @code {
     [Parameter] public string PageId { get; set; }
@@ -102,28 +96,18 @@
     private async Task LoadQuestions()
     {
         IsLoadingQuestions = true;
-        try
+        var result = await QuestionService.GetOrderedQuestions();
+        if (result.IsSuccess)
         {
-            var result = await QuestionService.GetOrderedQuestions();
-            if (result.IsSuccess)
-            {
-                Questions = result.Value;
-                CurrentQuestionIndex = 0;
-                CurrentAnswer = "";
-            }
-            else
-            {
-                await JSRuntime.InvokeVoidAsync("alert", "Error loading questions: " + string.Join(", ", result.Errors));
-            }
+            Questions = result.Value;
+            CurrentQuestionIndex = 0;
+            CurrentAnswer = "";
         }
-        catch (Exception ex)
+        else
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Error: " + ex.Message);
+            result.ShowErrorToast(ToastService);
         }
-        finally
-        {
-            IsLoadingQuestions = false;
-        }
+        IsLoadingQuestions = false;
     }
     
     private async Task HandleNextQuestion()
@@ -152,21 +136,11 @@
             return;
             
         IsLoading = true;
-        try
+        var result = await FactService.GenerateFact(PageId, CurrentQuestion.Content, CurrentAnswer);
+        if (!result.IsSuccess)
         {
-            var result = await FactService.GenerateFact(PageId, CurrentQuestion.Content, CurrentAnswer);
-            if (!result.IsSuccess)
-            {
-                await JSRuntime.InvokeVoidAsync("alert", "Error generating fact: " + string.Join(", ", result.Errors));
-            }
+            result.ShowErrorToast(ToastService);
         }
-        catch (Exception ex)
-        {
-            await JSRuntime.InvokeVoidAsync("alert", "Error: " + ex.Message);
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        IsLoading = false;
     }
 }
