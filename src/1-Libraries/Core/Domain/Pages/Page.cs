@@ -198,6 +198,9 @@ public sealed class Page : AggregateRoot
         if (Route.IsNullOrEmptyOrWhiteSpace())
             throw PageDomainExceptions.RouteIsRequired();
 
+        if (!Route.IsAlphanumericAndUnderscore())
+            throw PageDomainExceptions.RouteMustContainOnlyAlphanumericAndUnderscore();
+
         var isRouteInUse = pageRepository.IsRouteInUse(Route, Id);
         if (isRouteInUse)
             throw PageDomainExceptions.RouteAlreadyExists();

@@ -19,7 +19,7 @@ namespace HeyItIsMe.Core.Resources {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class SharedResource {
@@ -345,6 +345,15 @@ namespace HeyItIsMe.Core.Resources {
         public static string Required_Prompt_Is_Missing {
             get {
                 return ResourceManager.GetString("Required_Prompt_Is_Missing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Route must only contain letters, numbers, and underscores. Special characters and spaces are not allowed..
+        /// </summary>
+        public static string RouteMustContainOnlyAlphanumericAndUnderscore {
+            get {
+                return ResourceManager.GetString("RouteMustContainOnlyAlphanumericAndUnderscore", resourceCulture);
             }
         }
     }

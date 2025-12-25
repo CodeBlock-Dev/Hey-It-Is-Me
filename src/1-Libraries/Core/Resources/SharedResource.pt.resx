@@ -213,4 +213,7 @@
   <data name="PageVisitType_UniqueVisitors" xml:space="preserve">
     <value>Visitantes Únicos</value>
   </data>
+  <data name="RouteMustContainOnlyAlphanumericAndUnderscore" xml:space="preserve">
+    <value>O nome da rota deve conter apenas letras, números e sublinhados. Caracteres especiais e espaços não são permitidos.</value>
+  </data>
 </root>

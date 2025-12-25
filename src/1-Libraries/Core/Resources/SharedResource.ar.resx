@@ -213,4 +213,7 @@
   <data name="PageVisitType_UniqueVisitors" xml:space="preserve">
     <value>زوار فريدون</value>
   </data>
+  <data name="RouteMustContainOnlyAlphanumericAndUnderscore" xml:space="preserve">
+    <value>يجب أن يحتوي المسار على حروف وأرقام وشرطات سفلية فقط. لا يُسمح باستخدام الرموز الخاصة أو المسافات.</value>
+  </data>
 </root>

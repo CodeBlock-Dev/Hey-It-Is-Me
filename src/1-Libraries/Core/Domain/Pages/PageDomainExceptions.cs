@@ -37,6 +37,15 @@ internal static class PageDomainExceptions
     }
 
     /// <summary>
+    /// Creates a domain exception when a Route contains invalid characters.
+    /// </summary>
+    /// <returns>Domain exception with localized error message</returns>
+    internal static DomainException RouteMustContainOnlyAlphanumericAndUnderscore()
+    {
+        return new DomainException(nameof(SharedResource.RouteMustContainOnlyAlphanumericAndUnderscore), typeof(SharedResource));
+    }
+
+    /// <summary>
     /// Creates a domain exception when the Page display name is missing or invalid.
     /// This exception is thrown when business rules require a valid display name but none is provided.
     /// </summary>

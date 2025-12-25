@@ -213,4 +213,7 @@
   <data name="PageVisitType_UniqueVisitors" xml:space="preserve">
     <value>Visiteurs Uniques</value>
   </data>
+  <data name="RouteMustContainOnlyAlphanumericAndUnderscore" xml:space="preserve">
+    <value>L'itinéraire ne doit contenir que des lettres, des chiffres et des traits de soulignement. Les caractères spéciaux et les espaces ne sont pas autorisés.</value>
+  </data>
 </root>
