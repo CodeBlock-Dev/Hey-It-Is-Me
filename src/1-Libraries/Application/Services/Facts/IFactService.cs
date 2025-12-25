@@ -28,5 +28,5 @@ public interface IFactService
     /// <summary>
     /// Generates a new fact based on question and answer.
     /// </summary>
-    Task<Result<CommandResult>> GenerateFact(string pageId, string question, string answer);
+    Task<Result<CommandResult>> GenerateFact(string pageId, string questionId, string answer);
 }

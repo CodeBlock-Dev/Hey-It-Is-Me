@@ -137,9 +137,9 @@ public sealed class Page : AggregateRoot
         TrackChange(nameof(ContactRemoved));
     }
 
-    public Fact AddFact(string title, string content)
+    public Fact AddFact(string title, string content, string questionId)
     {
-        var fact = Fact.Create(title, content);
+        var fact = Fact.Create(title, content, questionId);
 
         Facts.Add(fact);
 

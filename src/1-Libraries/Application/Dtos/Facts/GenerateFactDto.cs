@@ -17,7 +17,7 @@ public class GenerateFactDto
     /// </summary>
     [Display(Name = nameof(SharedResource.Question), ResourceType = typeof(SharedResource))]
     [Required(ErrorMessageResourceName = nameof(CoreResource.Required), ErrorMessageResourceType = typeof(CoreResource))]
-    public string Question { get; set; }
+    public string QuestionId { get; set; }
 
     /// <summary>
     /// The answer for generating the fact. Required field that cannot be empty.

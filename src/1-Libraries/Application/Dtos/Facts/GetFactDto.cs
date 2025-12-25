@@ -18,4 +18,10 @@ public class GetFactDto : GetEntityDto
     /// The unique identifier of the page that contains this fact.
     /// </summary>
     public string PageId { get; set; }
+
+    /// <summary>
+    /// Gets the unique identifier for the question if this fact is generated in a wizard.
+    /// </summary>
+    public string QuestionId { get; private set; }
+
 }

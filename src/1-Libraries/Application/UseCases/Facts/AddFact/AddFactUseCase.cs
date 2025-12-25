@@ -26,7 +26,7 @@ internal class AddFactUseCase : BaseCommandHandler, IRequestHandler<AddFactReque
 
         var loadedVersion = page.Version;
 
-        var fact = page.AddFact(request.Title, request.Content);
+        var fact = page.AddFact(request.Title, request.Content, questionId:"");
 
         await _pageRepository.ConcurrencySafeUpdateAsync(page, loadedVersion);
 

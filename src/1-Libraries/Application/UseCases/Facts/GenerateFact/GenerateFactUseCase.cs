@@ -6,6 +6,7 @@ using CodeBlock.DevKit.Core.Helpers;
 using HeyItIsMe.Application.Contracts;
 using HeyItIsMe.Application.Exceptions;
 using HeyItIsMe.Core.Domain.Pages;
+using HeyItIsMe.Core.Domain.Questions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -18,7 +19,7 @@ internal class GenerateFactUseCase : BaseCommandHandler, IRequestHandler<Generat
     private readonly IAIImageService _aiImageService;
     private readonly IBotRepository _botRepository;
     private readonly IImageService _imageService;
-
+    private readonly IQuestionRepository _questionRepository;
     public GenerateFactUseCase(
         IPageRepository pageRepository,
         IRequestDispatcher requestDispatcher,
@@ -27,7 +28,8 @@ internal class GenerateFactUseCase : BaseCommandHandler, IRequestHandler<Generat
         IAIImageService aiImageService,
         IBotRepository botRepository,
         IImageService imageService
-    )
+,
+        IQuestionRepository questionRepository)
         : base(requestDispatcher, logger)
     {
         _pageRepository = pageRepository;
@@ -35,6 +37,7 @@ internal class GenerateFactUseCase : BaseCommandHandler, IRequestHandler<Generat
         _aiImageService = aiImageService;
         _botRepository = botRepository;
         _imageService = imageService;
+        _questionRepository = questionRepository;
     }
 
     public async Task<CommandResult> Handle(GenerateFactRequest request, CancellationToken cancellationToken)
@@ -56,6 +59,10 @@ internal class GenerateFactUseCase : BaseCommandHandler, IRequestHandler<Generat
 
     private async Task<Fact> GenerateFactAndAddItToPage(Page page, GenerateFactRequest request)
     {
+        var question = await _questionRepository.GetByIdAsync(request.QuestionId);
+        if (question == null)
+            throw QuestionApplicationExceptions.QuestionNotFound(request.QuestionId);
+
         var textBot = await _botRepository.GetBySystemName(Constants.FACT_TEXT_GENERATOR_BOT);
         if (textBot == null)
             throw PageApplicationExceptions.FactGeneratorBotNotFound(Constants.FACT_TEXT_GENERATOR_BOT);
@@ -64,11 +71,11 @@ internal class GenerateFactUseCase : BaseCommandHandler, IRequestHandler<Generat
         if (imageBot == null)
             throw PageApplicationExceptions.FactGeneratorBotNotFound(Constants.FACT_IMAGE_GENERATOR_BOT);
 
-        var content = await GetFactContent(textBot, request.Question, request.Answer);
-        var title = await GetFactTitle(textBot, request.Question, request.Answer, content);
-        var base64Image = await GetFactBase64Image(page, imageBot, request.Question, request.Answer, title, content);
+        var content = await GetFactContent(textBot, question.Content, request.Answer);
+        var title = await GetFactTitle(textBot, question.Content, request.Answer, content);
+        var base64Image = await GetFactBase64Image(page, imageBot, question.Content, request.Answer, title, content);
 
-        var fact = page.AddFact(title, content);
+        var fact = page.AddFact(title, content, question.Content);
 
         var fileName = $"{fact.Id}.jpg?v={RandomDataGenerator.GetRandomNumber(5)}";
 

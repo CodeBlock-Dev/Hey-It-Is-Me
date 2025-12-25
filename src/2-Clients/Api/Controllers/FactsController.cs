@@ -50,6 +50,6 @@ public class FactsController : BaseApiController
     [HttpPost]
     public async Task<Result<CommandResult>> GenerateFact([FromBody] GenerateFactDto input)
     {
-        return await _factService.GenerateFact(input.PageId, input.Question, input.Answer);
+        return await _factService.GenerateFact(input.PageId, input.QuestionId, input.Answer);
     }
 }

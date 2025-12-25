@@ -7,10 +7,10 @@ namespace HeyItIsMe.Application.UseCases.Facts.GenerateFact;
 
 internal class GenerateFactRequest : BaseCommand
 {
-    public GenerateFactRequest(string pageId, string question, string answer)
+    public GenerateFactRequest(string pageId, string questionId, string answer)
     {
         PageId = pageId;
-        Question = question;
+        QuestionId = questionId;
         Answer = answer;
     }
 
@@ -18,7 +18,7 @@ internal class GenerateFactRequest : BaseCommand
 
     [Display(Name = nameof(SharedResource.Question), ResourceType = typeof(SharedResource))]
     [Required(ErrorMessageResourceName = nameof(CoreResource.Required), ErrorMessageResourceType = typeof(CoreResource))]
-    public string Question { get; }
+    public string QuestionId { get; }
 
     [Display(Name = nameof(SharedResource.Answer), ResourceType = typeof(SharedResource))]
     [Required(ErrorMessageResourceName = nameof(CoreResource.Required), ErrorMessageResourceType = typeof(CoreResource))]

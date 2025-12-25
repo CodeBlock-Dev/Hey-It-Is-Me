@@ -136,7 +136,7 @@
             return;
             
         IsLoading = true;
-        var result = await FactService.GenerateFact(PageId, CurrentQuestion.Content, CurrentAnswer);
+        var result = await FactService.GenerateFact(PageId, CurrentQuestion.Id, CurrentAnswer);
         if (!result.IsSuccess)
         {
             result.ShowErrorToast(ToastService);

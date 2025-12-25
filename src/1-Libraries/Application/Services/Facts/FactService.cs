@@ -34,8 +34,8 @@ internal class FactService : ApplicationService, IFactService
         return await _requestDispatcher.SendCommand(new UpdateFactImageUrlRequest(factId, input.Base64Image));
     }
 
-    public async Task<Result<CommandResult>> GenerateFact(string pageId, string question, string answer)
+    public async Task<Result<CommandResult>> GenerateFact(string pageId, string questionId, string answer)
     {
-        return await _requestDispatcher.SendCommand(new GenerateFactRequest(pageId, question, answer));
+        return await _requestDispatcher.SendCommand(new GenerateFactRequest(pageId, questionId, answer));
     }
 }
