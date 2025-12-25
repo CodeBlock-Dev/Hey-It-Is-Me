@@ -12,6 +12,7 @@ public sealed class Page : AggregateRoot
         UserId = userId;
         AvatarImageUrl = string.Empty;
         ReferenceImageUrl = string.Empty;
+        State = PageState.PendingDisplayName;
         Contacts = new List<Contact>();
         Facts = new List<Fact>();
 
@@ -50,6 +51,11 @@ public sealed class Page : AggregateRoot
 
     public string ReferenceImageUrl { get; private set; }
 
+    /// <summary>
+    /// The current state of the page in the creation wizard.
+    /// </summary>
+    public PageState State { get; private set; }
+
     public static Page Create(string route, string userId, IPageRepository pageRepository)
     {
         return new Page(route, userId, pageRepository);
@@ -71,6 +77,8 @@ public sealed class Page : AggregateRoot
 
         CheckDisplayNamePolicy();
 
+        UpdateState(PageState.PendingAvatar);
+
         AddDomainEvent(new PageDisplayNameUpdated(Id, DisplayName));
         TrackChange(nameof(PageDisplayNameUpdated));
     }
@@ -82,6 +90,8 @@ public sealed class Page : AggregateRoot
 
         AvatarImageUrl = avatarImageUrl;
 
+        UpdateState(PageState.PendingReferenceImage);
+
         AddDomainEvent(new PageAvatarImageUpdated(Id, AvatarImageUrl));
         TrackChange(nameof(PageAvatarImageUpdated));
     }
@@ -92,6 +102,8 @@ public sealed class Page : AggregateRoot
             return;
 
         ReferenceImageUrl = referenceImageUrl;
+
+        UpdateState(PageState.PendingQuestions);
 
         AddDomainEvent(new PageReferenceImageUpdated(Id, ReferenceImageUrl));
         TrackChange(nameof(PageReferenceImageUpdated));
@@ -183,6 +195,17 @@ public sealed class Page : AggregateRoot
 
         AddDomainEvent(new FactImageUrlUpdated(Id, factId, imageUrl));
         TrackChange(nameof(FactImageUrlUpdated));
+    }
+
+    public void UpdateState(PageState state)
+    {
+        if (State == state)
+            return;
+
+        State = state;
+
+        AddDomainEvent(new PageStateUpdated(Id, State));
+        TrackChange(nameof(PageStateUpdated));
     }
 
     protected override void CheckInvariants() { }

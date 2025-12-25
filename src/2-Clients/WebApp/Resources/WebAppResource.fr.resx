@@ -530,4 +530,10 @@
   <data name="No_Statistics_Available" xml:space="preserve">
     <value>Aucune statistique disponible</value>
   </data>
+  <data name="Page_Incomplete_Message" xml:space="preserve">
+    <value>La création de votre page est incomplète. Continuez où vous vous êtes arrêté pour compléter votre page de faits.</value>
+  </data>
+  <data name="Continue_Page_Creation" xml:space="preserve">
+    <value>Continuer la Création de Page</value>
+  </data>
 </root>

@@ -7,6 +7,7 @@
 @using CodeBlock.DevKit.Subscription.Resources
 @using CodeBlock.DevKit.Subscription.Services.Subscriptions
 @using HeyItIsMe.Application.Dtos.Pages
+@using HeyItIsMe.Core.Domain.Pages
 @inject IStringLocalizer<SubscriptionResource> SubscriptionLocalizer
 @inject ISettingAccessorService SettingAccessorService
 @inject IStringLocalizer<LicensingResource> LicensingLocalizer
@@ -38,6 +39,18 @@ else
                 <div class="no-subscription-text">
                     <span class="no-subscription-message">@WebAppLocalizer[WebAppResource.No_Page_With_Subscription_Message]</span>
                     <a href="/page/create" class="browse-plans-link">@WebAppLocalizer[WebAppResource.Get_Started_With_Subscription]</a>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Page.State != PageState.Completed)
+    {
+        <div class="no-subscription-section">
+            <div class="no-subscription-content">
+                <i class="bi bi-exclamation-circle me-3"></i>
+                <div class="no-subscription-text">
+                    <span class="no-subscription-message">@WebAppLocalizer[WebAppResource.Page_Incomplete_Message]</span>
+                    <a href="/page/create" class="browse-plans-link">@WebAppLocalizer[WebAppResource.Continue_Page_Creation]</a>
                 </div>
             </div>
         </div>

@@ -530,4 +530,10 @@
   <data name="No_Statistics_Available" xml:space="preserve">
     <value>لا توجد إحصائيات متاحة</value>
   </data>
+  <data name="Page_Incomplete_Message" xml:space="preserve">
+    <value>إنشاء صفحتك غير مكتمل. تابع من حيث توقفت لإكمال صفحة الحقائق الخاصة بك.</value>
+  </data>
+  <data name="Continue_Page_Creation" xml:space="preserve">
+    <value>متابعة إنشاء الصفحة</value>
+  </data>
 </root>

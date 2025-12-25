@@ -1,6 +1,7 @@
 using CodeBlock.DevKit.Contracts.Dtos;
 using CodeBlock.DevKit.Core.Helpers;
 using HeyItIsMe.Application.Dtos.Pages;
+using HeyItIsMe.Core.Domain.Pages;
 
 namespace HeyItIsMe.Application.Services.Pages;
 
@@ -50,4 +51,9 @@ public interface IPageService
     /// Searches for pages based on specified criteria.
     /// </summary>
     Task<Result<SearchOutputDto<GetPageDto>>> SearchPages(SearchPagesInputDto input);
+
+    /// <summary>
+    /// Updates the state of an existing page.
+    /// </summary>
+    Task<Result<CommandResult>> UpdatePageState(string id, PageState state);
 }

@@ -11,6 +11,8 @@ using HeyItIsMe.Application.UseCases.Pages.UpdatePageAvatarImage;
 using HeyItIsMe.Application.UseCases.Pages.UpdatePageDisplayName;
 using HeyItIsMe.Application.UseCases.Pages.UpdatePageReferenceImage;
 using HeyItIsMe.Application.UseCases.Pages.UpdatePageRoute;
+using HeyItIsMe.Application.UseCases.Pages.UpdatePageState;
+using HeyItIsMe.Core.Domain.Pages;
 
 namespace HeyItIsMe.Application.Services.Pages;
 
@@ -57,6 +59,11 @@ internal class PageService : ApplicationService, IPageService
     public async Task<Result<CommandResult>> UpdatePageReferenceImage(string id, string base64Image)
     {
         return await _requestDispatcher.SendCommand(new UpdatePageReferenceImageRequest(id, base64Image));
+    }
+
+    public async Task<Result<CommandResult>> UpdatePageState(string id, PageState state)
+    {
+        return await _requestDispatcher.SendCommand(new UpdatePageStateRequest(id, state));
     }
 
     public async Task<Result<SearchOutputDto<GetPageDto>>> SearchPages(SearchPagesInputDto input)

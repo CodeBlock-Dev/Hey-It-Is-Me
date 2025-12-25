@@ -1,7 +1,10 @@
 ﻿@page "/page/create"
 @using HeyItIsMe.WebApp.Pages.UserPanel.Page.Components.CreatePage
+@using HeyItIsMe.Core.Domain.Pages
+@using CodeBlock.DevKit.Subscription.Services.Subscriptions
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject ISubscriptionService SubscriptionService
 @implements IDisposable
 
 <div class="create-page-wizard">
@@ -10,9 +13,11 @@
             <div class="col-12 col-lg-8 col-xl-6">
                 <div class="wizard-card">
 
-                    <WizardProgressBar CurrentStep="@CurrentStep" ProgressPercentage="@GetProgressPercentage()" />
+                    @if (!IsInitializing)
+                    {
+                        <WizardProgressBar CurrentStep="@CurrentStep" ProgressPercentage="@GetProgressPercentage()" />
 
-                    <div class="wizard-content">
+                        <div class="wizard-content">
                         @if (CurrentStep == 0)
                         {
                             <WizardIntroStep OnNext="NextStep" />
@@ -51,7 +56,16 @@
                             <WizardCompletionStep PageUrl="@PageUrl"
                                                 OnStartOver="StartOver" />
                         }
-                    </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center p-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -63,6 +77,55 @@
     private string PageId = "";
     private string PageRoute = "";
     private string PageUrl = "";
+    private bool IsInitializing = true;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if user has subscription
+        var subscriptionResult = await SubscriptionService.GetUserSubscriptions(CurrentUser.GetUserId());
+        if (!subscriptionResult.IsSuccess || !subscriptionResult.Value.Any())
+        {
+            // No subscription, redirect to dashboard
+            Navigation.NavigateTo("/dashboard");
+            return;
+        }
+
+        // Check if user has a page
+        var hasPageResult = await PageService.UserHasAnyPage(CurrentUser.GetUserId());
+        if (hasPageResult.IsSuccess && hasPageResult.Value)
+        {
+            // User has a page, check the state and redirect to appropriate step
+            var pageResult = await PageService.GetPageByUserId(CurrentUser.GetUserId());
+            if (pageResult.IsSuccess && pageResult.Value != null)
+            {
+                var page = pageResult.Value;
+                
+                // If page is completed, redirect to dashboard
+                if (page.State == PageState.Completed)
+                {
+                    Navigation.NavigateTo("/dashboard");
+                    return;
+                }
+                
+                // Set page data and navigate to appropriate step
+                PageId = page.Id;
+                PageRoute = page.Route;
+                PageUrl = $"https://hey-it-is.me/{PageRoute}";
+                
+                // Map state to step
+                CurrentStep = page.State switch
+                {
+                    PageState.PendingDisplayName => 2, // Display name step
+                    PageState.PendingAvatar => 3, // Avatar step
+                    PageState.PendingReferenceImage => 4, // Reference image step
+                    PageState.PendingQuestions => 6, // Questions step (skip contacts)
+                    _ => 0 // Default to intro
+                };
+            }
+        }
+        
+        IsInitializing = false;
+    }
     
     private double GetProgressPercentage()
     {
@@ -92,7 +155,7 @@
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && !IsInitializing)
         {
             // Initialize wizard functionality
             await JSRuntime.InvokeVoidAsync("createPageWizard.initializeWizard");

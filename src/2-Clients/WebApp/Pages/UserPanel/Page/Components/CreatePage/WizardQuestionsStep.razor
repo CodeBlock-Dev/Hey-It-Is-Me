@@ -127,6 +127,19 @@
             return;
             
         await GenerateFactForCurrentQuestion();
+        
+        // Check if there are any more questions after answering this one
+        await LoadQuestions();
+        if (Questions == null || !Questions.Any())
+        {
+            // All questions are completed, update page state to Completed
+            var updateStateResult = await PageService.UpdatePageState(PageId, Core.Domain.Pages.PageState.Completed);
+            if (!updateStateResult.IsSuccess)
+            {
+                updateStateResult.ShowErrorToast(ToastService);
+            }
+        }
+        
         await OnComplete.InvokeAsync();
     }
     

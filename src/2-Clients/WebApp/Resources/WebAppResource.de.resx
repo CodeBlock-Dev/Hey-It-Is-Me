@@ -530,4 +530,10 @@
   <data name="No_Statistics_Available" xml:space="preserve">
     <value>Keine Statistiken verfügbar</value>
   </data>
+  <data name="Page_Incomplete_Message" xml:space="preserve">
+    <value>Die Erstellung Ihrer Seite ist unvollständig. Setzen Sie dort fort, wo Sie aufgehört haben, um Ihre Faktenseite zu vervollständigen.</value>
+  </data>
+  <data name="Continue_Page_Creation" xml:space="preserve">
+    <value>Seitenerstellung fortsetzen</value>
+  </data>
 </root>

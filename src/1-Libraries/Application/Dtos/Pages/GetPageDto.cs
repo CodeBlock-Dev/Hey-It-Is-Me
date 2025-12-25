@@ -1,6 +1,7 @@
 using CodeBlock.DevKit.Contracts.Dtos;
 using HeyItIsMe.Application.Dtos.Contacts;
 using HeyItIsMe.Application.Dtos.Facts;
+using HeyItIsMe.Core.Domain.Pages;
 
 namespace HeyItIsMe.Application.Dtos.Pages;
 
@@ -40,4 +41,9 @@ public class GetPageDto : GetEntityDto
     /// URL of the reference image used for AI image generation. Can be empty if no reference image is set.
     /// </summary>
     public string ReferenceImageUrl { get; set; }
+
+    /// <summary>
+    /// The current state of the page in the creation wizard.
+    /// </summary>
+    public PageState State { get; set; }
 }

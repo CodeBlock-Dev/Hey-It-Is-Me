@@ -530,4 +530,10 @@
   <data name="No_Statistics_Available" xml:space="preserve">
     <value>هیچ آمار در دسترس نیست</value>
   </data>
+  <data name="Page_Incomplete_Message" xml:space="preserve">
+    <value>ایجاد صفحه شما ناقص است. از جایی که متوقف شده‌اید ادامه دهید تا صفحه حقایق خود را تکمیل کنید.</value>
+  </data>
+  <data name="Continue_Page_Creation" xml:space="preserve">
+    <value>ادامه ایجاد صفحه</value>
+  </data>
 </root>
