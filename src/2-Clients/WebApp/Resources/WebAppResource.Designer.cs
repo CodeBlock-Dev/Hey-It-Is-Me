@@ -394,7 +394,7 @@ namespace HeyItIsMe.WebApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Get Started.
+        ///   Looks up a localized string similar to Create Your Fact Page.
         /// </summary>
         public static string Get_Started_With_Subscription {
             get {

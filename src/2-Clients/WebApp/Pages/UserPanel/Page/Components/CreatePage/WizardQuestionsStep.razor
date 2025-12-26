@@ -33,35 +33,42 @@
             </div>
         }
         
-        <div class="d-flex justify-content-end">
-            @if (CurrentQuestionIndex < Questions.Count() - 1)
-            {
-                <button class="btn btn-primary" @onclick="HandleNextQuestion" disabled="@IsLoading">
-                    @if (IsLoading)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                    }
-                    else
-                    {
-                        <i class="bi bi-arrow-right me-2"></i>
-                    }
-                    Next Question
-                </button>
-            }
-            else
-            {
-                <button class="btn btn-success" @onclick="HandleComplete" disabled="@IsLoading">
-                    @if (IsLoading)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                    }
-                    else
-                    {
-                        <i class="bi bi-check-lg me-2"></i>
-                    }
-                    Complete
-                </button>
-            }
+        <div class="d-flex justify-content-between">
+            <button class="btn btn-outline-secondary" @onclick="HandleSkipQuestion" disabled="@IsLoading">
+                <i class="bi bi-skip-forward me-2"></i>Skip
+            </button>
+            <div>
+                @if (CurrentQuestionIndex < Questions.Count() - 1)
+                {
+                    <button class="btn btn-primary" @onclick="HandleNextQuestion" disabled="@IsLoading">
+                        @if (IsLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Generating fact...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-arrow-right me-2"></i>
+                            <span>Next Question</span>
+                        }
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-success" @onclick="HandleComplete" disabled="@IsLoading">
+                        @if (IsLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Generating fact...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-lg me-2"></i>
+                            <span>Complete</span>
+                        }
+                    </button>
+                }
+            </div>
         </div>
     }
     else if (IsLoadingQuestions)
@@ -93,15 +100,18 @@
         await LoadQuestions();
     }
     
-    private async Task LoadQuestions()
+    private async Task LoadQuestions(bool resetIndex = true)
     {
         IsLoadingQuestions = true;
         var result = await QuestionService.GetOrderedQuestions();
         if (result.IsSuccess)
         {
             Questions = result.Value;
-            CurrentQuestionIndex = 0;
-            CurrentAnswer = "";
+            if (resetIndex)
+            {
+                CurrentQuestionIndex = 0;
+                CurrentAnswer = "";
+            }
         }
         else
         {
@@ -110,50 +120,128 @@
         IsLoadingQuestions = false;
     }
     
-    private async Task HandleNextQuestion()
+    private bool IsLastQuestion => CurrentQuestionIndex == Questions.Count() - 1;
+    
+    private async Task HandleSkipQuestion()
     {
-        if (CurrentQuestion == null || string.IsNullOrWhiteSpace(CurrentAnswer))
+        if (CurrentQuestion == null || IsLoading)
             return;
-            
-        await GenerateFactForCurrentQuestion();
         
+        // If we're on the last question, skip should complete the wizard
+        if (IsLastQuestion)
+        {
+            await CompleteWizard();
+            return;
+        }
+        
+        // Skip to next question without generating a fact
         CurrentQuestionIndex++;
         CurrentAnswer = "";
+        
+        // If we've skipped past all current questions, check if there are more
+        if (CurrentQuestionIndex >= Questions.Count())
+        {
+            await CheckAndCompleteIfDone();
+        }
+    }
+    
+    private async Task HandleNextQuestion()
+    {
+        if (CurrentQuestion == null || string.IsNullOrWhiteSpace(CurrentAnswer) || IsLoading)
+            return;
+            
+        // Generate fact and only proceed if successful
+        var success = await GenerateFactForCurrentQuestion();
+        if (!success)
+        {
+            // Don't proceed if fact generation failed
+            return;
+        }
+        
+        // Move to next question after successful fact generation
+        CurrentQuestionIndex++;
+        CurrentAnswer = "";
+        
+        // If we've answered all current questions, check if there are more
+        if (CurrentQuestionIndex >= Questions.Count())
+        {
+            await CheckAndCompleteIfDone();
+        }
     }
     
     private async Task HandleComplete()
     {
-        if (CurrentQuestion == null || string.IsNullOrWhiteSpace(CurrentAnswer))
+        if (CurrentQuestion == null || string.IsNullOrWhiteSpace(CurrentAnswer) || IsLoading)
             return;
             
-        await GenerateFactForCurrentQuestion();
-        
-        // Check if there are any more questions after answering this one
-        await LoadQuestions();
-        if (Questions == null || !Questions.Any())
+        // Generate fact and only proceed if successful
+        var success = await GenerateFactForCurrentQuestion();
+        if (!success)
         {
-            // All questions are completed, update page state to Completed
-            var updateStateResult = await PageService.UpdatePageState(PageId, Core.Domain.Pages.PageState.Completed);
-            if (!updateStateResult.IsSuccess)
-            {
-                updateStateResult.ShowErrorToast(ToastService);
-            }
+            // Don't proceed if fact generation failed
+            return;
         }
         
+        // We're on the last question and fact was generated successfully, complete the wizard
+        await CompleteWizard();
+    }
+    
+    private async Task CompleteWizard()
+    {
+        // Update page state to Completed
+        var updateStateResult = await PageService.UpdatePageState(PageId, Core.Domain.Pages.PageState.Completed);
+        if (!updateStateResult.IsSuccess)
+        {
+            updateStateResult.ShowErrorToast(ToastService);
+            // Don't complete if state update failed
+            return;
+        }
+        
+        // Successfully completed, move to completion step
         await OnComplete.InvokeAsync();
     }
     
-    private async Task GenerateFactForCurrentQuestion()
+    private async Task CheckAndCompleteIfDone()
+    {
+        // Small delay to ensure fact is persisted before reloading questions
+        await Task.Delay(500);
+        
+        // Reload questions to see if there are any more unanswered questions
+        // Don't reset index when checking for completion
+        await LoadQuestions(resetIndex: false);
+        
+        // If no more questions, we're done
+        if (Questions == null || !Questions.Any())
+        {
+            await CompleteWizard();
+        }
+        else
+        {
+            // There are more questions available, reset to first question
+            CurrentQuestionIndex = 0;
+            CurrentAnswer = "";
+        }
+    }
+    
+    private async Task<bool> GenerateFactForCurrentQuestion()
     {
         if (CurrentQuestion == null || string.IsNullOrWhiteSpace(CurrentAnswer) || string.IsNullOrWhiteSpace(PageId))
-            return;
+            return false;
             
         IsLoading = true;
-        var result = await FactService.GenerateFact(PageId, CurrentQuestion.Id, CurrentAnswer);
-        if (!result.IsSuccess)
+        try
         {
-            result.ShowErrorToast(ToastService);
+            var result = await FactService.GenerateFact(PageId, CurrentQuestion.Id, CurrentAnswer);
+            if (!result.IsSuccess)
+            {
+                result.ShowErrorToast(ToastService);
+                return false;
+            }
+            return true;
         }
-        IsLoading = false;
+        finally
+        {
+            IsLoading = false;
+        }
     }
 }

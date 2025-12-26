@@ -527,7 +527,7 @@
     <value>You have an active subscription but haven't created a page yet. Create your first fact page to get started.</value>
   </data>
   <data name="Get_Started_With_Subscription" xml:space="preserve">
-    <value>Get Started</value>
+    <value>Create Your Fact Page</value>
   </data>
   <data name="Page_Incomplete_Message" xml:space="preserve">
     <value>Your page creation is incomplete. Continue where you left off to complete your fact page.</value>
