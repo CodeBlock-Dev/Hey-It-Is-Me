@@ -37,6 +37,11 @@
     </div>
 </div>
 
+<ImageCropper ShowCropper="@ShowCropper" 
+              ImageDataUrl="@SelectedImageDataUrl" 
+              OnCropComplete="HandleCropComplete" 
+              OnCancel="HandleCropCancel" />
+
 
 @code {
     [Parameter] public string PageId { get; set; }
@@ -45,6 +50,9 @@
     private string AvatarBase64;
     private string AvatarPreview;
     private bool IsLoading = false;
+    private bool ShowCropper = false;
+    private string SelectedImageDataUrl;
+    private string SelectedImageContentType;
     
     private async Task OnAvatarFileSelected(InputFileChangeEventArgs e)
     {
@@ -63,20 +71,37 @@
                 return;
             }
 
-            // Convert to base64
+            // Convert to base64 for cropper
             using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
             using var memoryStream = new MemoryStream();
             await stream.CopyToAsync(memoryStream);
             var imageBytes = memoryStream.ToArray();
-            AvatarBase64 = Convert.ToBase64String(imageBytes);
+            var base64 = Convert.ToBase64String(imageBytes);
             
-            // Create data URL for preview
-            AvatarPreview = $"data:{file.ContentType};base64,{AvatarBase64}";
+            // Store image data for cropper
+            SelectedImageDataUrl = $"data:{file.ContentType};base64,{base64}";
+            SelectedImageContentType = file.ContentType;
+            ShowCropper = true;
             
             StateHasChanged();
         }
     }
     
+    private async Task HandleCropComplete(string croppedBase64)
+    {
+        AvatarBase64 = croppedBase64;
+        AvatarPreview = $"data:{SelectedImageContentType};base64,{croppedBase64}";
+        ShowCropper = false;
+        SelectedImageDataUrl = null;
+        StateHasChanged();
+    }
+    
+    private async Task HandleCropCancel()
+    {
+        ShowCropper = false;
+        SelectedImageDataUrl = null;
+        StateHasChanged();
+    }
     
     private async Task HandleUpdateAvatar()
     {
