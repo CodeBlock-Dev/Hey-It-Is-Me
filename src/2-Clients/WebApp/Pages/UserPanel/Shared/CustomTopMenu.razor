@@ -1,0 +1,37 @@
+﻿@using CodeBlock.DevKit.Clients.WebApp.Pages.UserPanel.Shared
+@inherits TopMenu
+@attribute [ReplaceBaseComponent]
+
+@inject ICurrentUser CurrentUser
+
+<div class="dropdown">
+    <button class="btn btn-link text-white p-0 user-menu-btn" type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-person-circle fs-4"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end user-dropdown" aria-labelledby="userMenuDropdown">
+        <li class="dropdown-item-text">
+            <div class="user-dropdown-info">
+                <div class="user-dropdown-name">@CurrentUser.GetEmail()</div>
+            </div>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <NavLink class="dropdown-item" href="/dashboard">
+                <i class="bi bi-speedometer me-2"></i>
+                @WebAppClientLocalizer[WebAppClientResource.Nav_Menu_Dashboard]
+            </NavLink>
+        </li>
+        <li>
+            <NavLink class="dropdown-item" href="/user/profile" id="profileMenuItem">
+                <i class="bi bi-person me-2"></i>
+                @WebAppClientLocalizer[WebAppClientResource.Nav_Menu_User_Profile]
+            </NavLink>
+        </li>
+        <li>
+            <NavLink class="dropdown-item text-danger" href="/logout" id="logoutMenuItem">
+                <i class="bi bi-box-arrow-right me-2"></i>
+                @WebAppClientLocalizer[WebAppClientResource.Nav_Menu_Logout]
+            </NavLink>
+        </li>
+    </ul>
+</div>
