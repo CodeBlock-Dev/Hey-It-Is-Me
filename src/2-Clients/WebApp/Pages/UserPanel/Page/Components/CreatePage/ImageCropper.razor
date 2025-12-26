@@ -80,27 +80,29 @@
             // Wait for cropper to be ready (with timeout)
             var maxWaitTime = DateTime.Now.AddSeconds(5);
             bool isReady = false;
-            while (DateTime.Now < maxWaitTime && !isReady)
+            int attempts = 0;
+            while (DateTime.Now < maxWaitTime && !isReady && attempts < 50)
             {
                 try
                 {
                     isReady = await JSRuntime.InvokeAsync<bool>("imageCropper.checkReady");
                     if (isReady) break;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Ignore errors while checking
+                    Console.WriteLine($"Error checking ready state: {ex.Message}");
                 }
                 await Task.Delay(100);
+                attempts++;
             }
             
             if (!isReady)
             {
-                throw new Exception("Cropper not ready - please wait a moment and try again");
+                throw new Exception("Cropper not ready after waiting - please try selecting the image again");
             }
             
             // Use CancellationToken with timeout to prevent hanging
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
             
             var croppedDataUrl = await JSRuntime.InvokeAsync<string>("imageCropper.getCroppedImage", cts.Token);
             
@@ -109,13 +111,8 @@
                 throw new Exception("Failed to crop image - no data returned");
             }
             
-            // Extract base64 from data URL
-            if (!croppedDataUrl.Contains(","))
-            {
-                throw new Exception("Invalid cropped image data format");
-            }
-            
-            var base64 = croppedDataUrl.Split(',')[1];
+            // The JavaScript now returns just the base64 string (not the full data URL)
+            var base64 = croppedDataUrl;
             
             await OnCropComplete.InvokeAsync(base64);
             
@@ -126,13 +123,19 @@
         {
             Console.Error.WriteLine("Error cropping image: Operation timed out");
         }
+        catch (TimeoutException timeoutEx)
+        {
+            Console.Error.WriteLine($"Error cropping image: {timeoutEx.Message}");
+        }
         catch (JSException jsEx)
         {
             Console.Error.WriteLine($"Error cropping image (JS): {jsEx.Message}");
+            Console.Error.WriteLine($"JS Stack: {jsEx.StackTrace}");
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error cropping image: {ex.Message}");
+            Console.Error.WriteLine($"Stack: {ex.StackTrace}");
         }
         finally
         {

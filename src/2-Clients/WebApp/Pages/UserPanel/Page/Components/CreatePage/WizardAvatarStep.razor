@@ -90,7 +90,8 @@
     private async Task HandleCropComplete(string croppedBase64)
     {
         AvatarBase64 = croppedBase64;
-        AvatarPreview = $"data:{SelectedImageContentType};base64,{croppedBase64}";
+        // Use JPEG since the cropper returns JPEG format
+        AvatarPreview = $"data:image/jpeg;base64,{croppedBase64}";
         ShowCropper = false;
         SelectedImageDataUrl = null;
         StateHasChanged();

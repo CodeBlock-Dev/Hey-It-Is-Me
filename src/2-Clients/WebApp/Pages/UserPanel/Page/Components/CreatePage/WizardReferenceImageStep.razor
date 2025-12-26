@@ -89,7 +89,8 @@
     private async Task HandleCropComplete(string croppedBase64)
     {
         ReferenceBase64 = croppedBase64;
-        ReferencePreview = $"data:{SelectedImageContentType};base64,{croppedBase64}";
+        // Use JPEG since the cropper returns JPEG format
+        ReferencePreview = $"data:image/jpeg;base64,{croppedBase64}";
         ShowCropper = false;
         SelectedImageDataUrl = null;
         StateHasChanged();

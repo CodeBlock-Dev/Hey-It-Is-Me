@@ -328,47 +328,107 @@ window.imageCropper = {
 
     // Get cropped image as base64
     getCroppedImage: function() {
-        if (!this.imageElement || !this.cropBoxElement || !this.containerElement) {
-            throw new Error('Cropper not initialized');
+        console.log('getCroppedImage called');
+        try {
+            if (!this.imageElement || !this.cropBoxElement || !this.containerElement) {
+                console.error('Cropper elements missing');
+                throw new Error('Cropper not initialized');
+            }
+
+            if (!this.isReady) {
+                console.error('Cropper not ready, isReady:', this.isReady);
+                throw new Error('Cropper not ready - please wait for initialization');
+            }
+
+            const img = this.imageElement;
+            const cropBox = this.cropBoxElement;
+            const container = this.containerElement;
+
+            console.log('Image dimensions:', img.naturalWidth, 'x', img.naturalHeight);
+            console.log('Crop size:', this.cropSize);
+            console.log('Image scale:', this.imageScale);
+            console.log('Image offset:', this.imageOffsetX, this.imageOffsetY);
+
+            // Ensure image is loaded
+            if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
+                console.error('Image not loaded - complete:', img.complete, 'width:', img.naturalWidth, 'height:', img.naturalHeight);
+                throw new Error('Image not loaded - width: ' + img.naturalWidth + ', height: ' + img.naturalHeight);
+            }
+
+            // Create canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = this.cropSize;
+            canvas.height = this.cropSize;
+            const ctx = canvas.getContext('2d');
+
+            if (!ctx) {
+                throw new Error('Failed to get canvas context');
+            }
+
+            // Calculate source rectangle using getBoundingClientRect for accuracy
+            const containerRect = container.getBoundingClientRect();
+            const cropBoxRect = cropBox.getBoundingClientRect();
+            
+            // Get the image's actual position (accounting for transform)
+            const cropBoxX = cropBoxRect.left - containerRect.left;
+            const cropBoxY = cropBoxRect.top - containerRect.top;
+            
+            // The image's position in the container (accounting for transform offset)
+            const imageX = this.imageOffsetX;
+            const imageY = this.imageOffsetY;
+            
+            // Calculate the relative position of crop box within the scaled image
+            const relativeX = cropBoxX - imageX;
+            const relativeY = cropBoxY - imageY;
+            
+            // Convert to source coordinates in the original image (divide by scale)
+            const sourceX = Math.max(0, relativeX / this.imageScale);
+            const sourceY = Math.max(0, relativeY / this.imageScale);
+            
+            // Source dimensions (crop size divided by scale to get original image size)
+            const sourceWidth = Math.min(img.naturalWidth - sourceX, this.cropSize / this.imageScale);
+            const sourceHeight = Math.min(img.naturalHeight - sourceY, this.cropSize / this.imageScale);
+
+            // Ensure valid source dimensions
+            if (sourceWidth <= 0 || sourceHeight <= 0) {
+                throw new Error('Invalid crop dimensions: width=' + sourceWidth + ', height=' + sourceHeight);
+            }
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw cropped image
+            ctx.drawImage(
+                img,
+                sourceX, sourceY, sourceWidth, sourceHeight,
+                0, 0, this.cropSize, this.cropSize
+            );
+
+            // Convert to base64 - use JPEG with lower quality to reduce size for SignalR
+            console.log('Converting canvas to data URL...');
+            // Use JPEG with 0.75 quality to reduce file size for SignalR transfer
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+            
+            if (!dataUrl || dataUrl === 'data:,') {
+                console.error('Invalid data URL generated');
+                throw new Error('Failed to generate image data URL');
+            }
+
+            // Extract just the base64 part (after the comma) to reduce payload size
+            const base64Index = dataUrl.indexOf(',');
+            if (base64Index === -1) {
+                throw new Error('Invalid data URL format');
+            }
+            
+            const base64 = dataUrl.substring(base64Index + 1);
+            console.log('Base64 extracted, length:', base64.length);
+            
+            // Return just the base64 string to reduce SignalR payload size
+            return base64;
+        } catch (error) {
+            console.error('Error in getCroppedImage:', error);
+            throw error;
         }
-
-        if (!this.isReady) {
-            throw new Error('Cropper not ready - please wait for initialization');
-        }
-
-        const img = this.imageElement;
-        const cropBox = this.cropBoxElement;
-        const container = this.containerElement;
-
-        // Ensure image is loaded
-        if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
-            throw new Error('Image not loaded');
-        }
-
-        // Create canvas
-        const canvas = document.createElement('canvas');
-        canvas.width = this.cropSize;
-        canvas.height = this.cropSize;
-        const ctx = canvas.getContext('2d');
-
-        // Calculate source rectangle
-        const containerRect = container.getBoundingClientRect();
-        const cropBoxRect = cropBox.getBoundingClientRect();
-        
-        const sourceX = (cropBoxRect.left - containerRect.left - this.imageOffsetX) / this.imageScale;
-        const sourceY = (cropBoxRect.top - containerRect.top - this.imageOffsetY) / this.imageScale;
-        const sourceWidth = this.cropSize / this.imageScale;
-        const sourceHeight = this.cropSize / this.imageScale;
-
-        // Draw cropped image
-        ctx.drawImage(
-            img,
-            sourceX, sourceY, sourceWidth, sourceHeight,
-            0, 0, this.cropSize, this.cropSize
-        );
-
-        // Convert to base64
-        return canvas.toDataURL('image/png');
     },
 
     // Reset cropper
