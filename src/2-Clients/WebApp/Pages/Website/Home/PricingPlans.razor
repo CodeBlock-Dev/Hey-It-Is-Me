@@ -1,8 +1,11 @@
-﻿@using CodeBlock.DevKit.Contracts.Services
+﻿@using CodeBlock.DevKit.AIChatBot.Services.Bots
+@using CodeBlock.DevKit.Contracts.Services
 @using CodeBlock.DevKit.Pricing.Dtos
+@using Constants= HeyItIsMe.Application.Contracts.Constants
 @inherits ActivePlansToOrder
 @attribute [ReplaceBaseComponent]
 @inject ISettingAccessorService SettingAccessorService
+@inject IBotService BotService
 
 <section class="pricing-section" id="pricing">
     <div class="pricing-container">
@@ -29,7 +32,7 @@
                     <div class="plan-features">
                         @((MarkupString)StarterPlanDto.Features)
                     </div>
-                    <a href="/payment/order/plan/@StarterPlanDto.Id" class="btn btn-secondary plan-btn">Try Starter</a>
+                    <a href="/payment/order/plan/@StarterPlanDto.Id/@ImageGeneratorBotId" class="btn btn-secondary plan-btn">Try Starter</a>
                 </div>
             }
 
@@ -50,7 +53,7 @@
                     <div class="plan-features">
                         @((MarkupString)EssentialPlanDto.Features)
                     </div>
-                    <a href="/payment/order/plan/@EssentialPlanDto.Id" class="btn btn-secondary plan-btn">Choose Essential</a>
+                    <a href="/payment/order/plan/@EssentialPlanDto.Id/@ImageGeneratorBotId" class="btn btn-secondary plan-btn">Choose Essential</a>
                 </div>
             }
 
@@ -72,7 +75,7 @@
                     <div class="plan-features">
                         @((MarkupString)PremiumPlanDto.Features)
                     </div>
-                    <a href="/payment/order/plan/@PremiumPlanDto.Id" class="btn btn-primary plan-btn">Choose Premium</a>
+                    <a href="/payment/order/plan/@PremiumPlanDto.Id/@ImageGeneratorBotId" class="btn btn-primary plan-btn">Choose Premium</a>
                 </div>
             }
         </div>
@@ -83,16 +86,21 @@
     private GetPlanDto StarterPlanDto;
     private GetPlanDto EssentialPlanDto;
     private GetPlanDto PremiumPlanDto;
-    
+    private string ImageGeneratorBotId;
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
         if (base.Plans != null && base.Plans.Any())
         {
-            StarterPlanDto = base.Plans.FirstOrDefault(p => p.SystemName == HeyItIsMe.WebApp.Helpers.Constants.STARTER_PLAN);
-            EssentialPlanDto = base.Plans.FirstOrDefault(p => p.SystemName == HeyItIsMe.WebApp.Helpers.Constants.ESSENTIAL_PLAN);
-            PremiumPlanDto = base.Plans.FirstOrDefault(p => p.SystemName == HeyItIsMe.WebApp.Helpers.Constants.PREMIUM_PLAN);
+            StarterPlanDto = base.Plans.FirstOrDefault(p => p.SystemName == Constants.STARTER_PLAN);
+            EssentialPlanDto = base.Plans.FirstOrDefault(p => p.SystemName == Constants.ESSENTIAL_PLAN);
+            PremiumPlanDto = base.Plans.FirstOrDefault(p => p.SystemName == Constants.PREMIUM_PLAN);
         }
+
+        var botResult = await BotService.GetBotBySystemName(Constants.FACT_IMAGE_GENERATOR_BOT);
+        if (botResult.IsSuccess)
+            ImageGeneratorBotId = botResult.Value.Id;
     }
 }
