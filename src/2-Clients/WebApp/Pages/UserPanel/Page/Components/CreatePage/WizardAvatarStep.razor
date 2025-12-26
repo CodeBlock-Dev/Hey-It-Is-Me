@@ -87,7 +87,16 @@
         var result = await PageService.UpdatePageAvatarImage(PageId, AvatarBase64);
         if (result.IsSuccess)
         {
-            await OnNext.InvokeAsync();
+            // Update page state to next step in wizard
+            var stateResult = await PageService.UpdatePageState(PageId, Core.Domain.Pages.PageState.PendingReferenceImage);
+            if (!stateResult.IsSuccess)
+            {
+                stateResult.ShowErrorToast(ToastService);
+            }
+            else
+            {
+                await OnNext.InvokeAsync();
+            }
         }
         else
         {

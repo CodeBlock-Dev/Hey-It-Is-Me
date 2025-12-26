@@ -46,7 +46,16 @@
         var result = await PageService.UpdatePageDisplayName(PageId, new UpdatePageDisplayNameDto { DisplayName = DisplayName });
         if (result.IsSuccess)
         {
-            await OnNext.InvokeAsync();
+            // Update page state to next step in wizard
+            var stateResult = await PageService.UpdatePageState(PageId, Core.Domain.Pages.PageState.PendingAvatar);
+            if (!stateResult.IsSuccess)
+            {
+                stateResult.ShowErrorToast(ToastService);
+            }
+            else
+            {
+                await OnNext.InvokeAsync();
+            }
         }
         else
         {

@@ -77,8 +77,6 @@ public sealed class Page : AggregateRoot
 
         CheckDisplayNamePolicy();
 
-        UpdateState(PageState.PendingAvatar);
-
         AddDomainEvent(new PageDisplayNameUpdated(Id, DisplayName));
         TrackChange(nameof(PageDisplayNameUpdated));
     }
@@ -90,8 +88,6 @@ public sealed class Page : AggregateRoot
 
         AvatarImageUrl = avatarImageUrl;
 
-        UpdateState(PageState.PendingReferenceImage);
-
         AddDomainEvent(new PageAvatarImageUpdated(Id, AvatarImageUrl));
         TrackChange(nameof(PageAvatarImageUpdated));
     }
@@ -102,8 +98,6 @@ public sealed class Page : AggregateRoot
             return;
 
         ReferenceImageUrl = referenceImageUrl;
-
-        UpdateState(PageState.PendingQuestions);
 
         AddDomainEvent(new PageReferenceImageUpdated(Id, ReferenceImageUrl));
         TrackChange(nameof(PageReferenceImageUpdated));
