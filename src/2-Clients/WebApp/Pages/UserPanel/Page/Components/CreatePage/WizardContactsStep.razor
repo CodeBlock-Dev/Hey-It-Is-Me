@@ -111,6 +111,15 @@
             }
         }
         
+        // Update page state to next step in wizard (Questions)
+        var stateResult = await PageService.UpdatePageState(PageId, Core.Domain.Pages.PageState.PendingQuestions);
+        if (!stateResult.IsSuccess)
+        {
+            stateResult.ShowErrorToast(ToastService);
+            IsLoading = false;
+            return;
+        }
+        
         await OnNext.InvokeAsync();
         IsLoading = false;
     }

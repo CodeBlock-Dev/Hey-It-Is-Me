@@ -272,8 +272,8 @@
         var result = await PageService.UpdatePageReferenceImage(PageId, ReferenceBase64);
         if (result.IsSuccess)
         {
-            // Update page state to next step in wizard
-            var stateResult = await PageService.UpdatePageState(PageId, Core.Domain.Pages.PageState.PendingQuestions);
+            // Update page state to next step in wizard (Contacts)
+            var stateResult = await PageService.UpdatePageState(PageId, Core.Domain.Pages.PageState.PendingContacts);
             if (!stateResult.IsSuccess)
             {
                 stateResult.ShowErrorToast(ToastService);

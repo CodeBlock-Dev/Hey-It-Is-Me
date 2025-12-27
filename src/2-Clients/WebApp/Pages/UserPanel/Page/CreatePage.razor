@@ -115,8 +115,9 @@
                     PageState.PendingDisplayName => 2, // Display name step
                     PageState.PendingAvatar => 3, // Avatar step
                     PageState.PendingReferenceImage => 4, // Reference image step
-                    PageState.PendingQuestions => 6, // Questions step (skip contacts)
-                    PageState.Completed => 7, // Questions step (skip contacts)
+                    PageState.PendingContacts => 5, // Contacts step
+                    PageState.PendingQuestions => 6, // Questions step
+                    PageState.Completed => 7, // Completion step
                     _ => 0 // Default to intro
                 };
             }

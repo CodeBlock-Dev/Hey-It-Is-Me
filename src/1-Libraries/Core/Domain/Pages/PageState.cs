@@ -21,13 +21,18 @@ public enum PageState
     PendingReferenceImage = 2,
 
     /// <summary>
-    /// Reference image is set but questions are not completed yet.
+    /// Reference image is set but contacts are not added yet.
     /// </summary>
-    PendingQuestions = 3,
+    PendingContacts = 3,
+
+    /// <summary>
+    /// Contacts are added but questions are not completed yet.
+    /// </summary>
+    PendingQuestions = 4,
 
     /// <summary>
     /// All wizard steps are completed and the page is ready.
     /// </summary>
-    Completed = 4
+    Completed = 5
 }
 
