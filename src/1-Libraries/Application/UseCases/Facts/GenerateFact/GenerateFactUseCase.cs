@@ -75,7 +75,7 @@ internal class GenerateFactUseCase : BaseCommandHandler, IRequestHandler<Generat
         var title = await GetFactTitle(textBot, question.Content, request.Answer, content);
         var base64Image = await GetFactBase64Image(page, imageBot, question.Content, request.Answer, title, content);
 
-        var fact = page.AddFact(title, content, question.Content);
+        var fact = page.AddFact(title, content, question.Id);
 
         var fileName = $"{fact.Id}.jpg?v={RandomDataGenerator.GetRandomNumber(5)}";
 
