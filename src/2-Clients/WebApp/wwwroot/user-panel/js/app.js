@@ -60,9 +60,19 @@ window.imageCropper = {
     dragStartY: 0,
     imageOffsetX: 0,
     imageOffsetY: 0,
-    imageScale: 1,
+    baseScale: 1, // Base scale to cover crop area
+    zoomLevel: 1, // Zoom multiplier (1 = no zoom, >1 = zoomed in, <1 = zoomed out)
+    imageScale: 1, // Final scale = baseScale * zoomLevel
     cropSize: 400, // 1:1 aspect ratio, 400x400px (will be adjusted for mobile)
     isReady: false,
+    minZoom: 1, // Minimum zoom level (calculated dynamically to ensure image covers crop area)
+    maxZoom: 3, // Maximum zoom level
+    // Pinch zoom state
+    isPinching: false,
+    initialPinchDistance: 0,
+    initialZoomLevel: 1,
+    lastPinchCenterX: 0,
+    lastPinchCenterY: 0,
 
     // Initialize cropper with image data URL
     initialize: function(imageDataUrl, containerId, imageId, cropBoxId) {
@@ -82,8 +92,13 @@ window.imageCropper = {
         this.isDragging = false;
         this.imageOffsetX = 0;
         this.imageOffsetY = 0;
+        this.baseScale = 1;
+        this.zoomLevel = 1;
         this.imageScale = 1;
         this.isReady = false;
+        this.isPinching = false;
+        this.initialPinchDistance = 0;
+        this.initialZoomLevel = 1;
 
         // Setup event listeners first (they can be set up before image loads)
         this.setupEventListeners();
@@ -147,7 +162,18 @@ window.imageCropper = {
         
         // Make sure image covers the crop area
         scale = Math.max(scale, this.cropSize / Math.min(img.naturalWidth, img.naturalHeight));
-        this.imageScale = scale;
+        this.baseScale = scale;
+        this.zoomLevel = 1;
+        this.imageScale = this.baseScale * this.zoomLevel;
+
+        // Calculate minimum zoom to ensure image always covers crop area both horizontally and vertically
+        // The image must be at least as large as the crop area in both dimensions
+        const minScaleX = this.cropSize / img.naturalWidth;
+        const minScaleY = this.cropSize / img.naturalHeight;
+        const minRequiredScale = Math.max(minScaleX, minScaleY);
+        // minZoom is relative to baseScale, so we need to ensure: baseScale * minZoom >= minRequiredScale
+        // Therefore: minZoom >= minRequiredScale / baseScale
+        this.minZoom = Math.max(1, minRequiredScale / this.baseScale);
 
         // Center the image
         const scaledWidth = img.naturalWidth * scale;
@@ -172,7 +198,8 @@ window.imageCropper = {
         cropBox.style.pointerEvents = 'none';
         cropBox.style.boxSizing = 'border-box';
 
-        this.updateImagePosition();
+        // Apply constraints to ensure crop area is always filled
+        this.constrainImagePosition(this.imageOffsetX, this.imageOffsetY);
         this.isReady = true;
     },
 
@@ -188,6 +215,7 @@ window.imageCropper = {
         this.mouseDownHandler = (e) => this.handleMouseDown(e);
         this.mouseMoveHandler = (e) => this.handleMouseMove(e);
         this.mouseUpHandler = () => this.handleMouseUp();
+        this.wheelHandler = (e) => this.handleWheel(e);
         this.touchStartHandler = (e) => this.handleTouchStart(e);
         this.touchMoveHandler = (e) => this.handleTouchMove(e);
         this.touchEndHandler = () => this.handleTouchEnd();
@@ -195,6 +223,7 @@ window.imageCropper = {
         container.addEventListener('mousedown', this.mouseDownHandler);
         document.addEventListener('mousemove', this.mouseMoveHandler);
         document.addEventListener('mouseup', this.mouseUpHandler);
+        container.addEventListener('wheel', this.wheelHandler, { passive: false });
 
         // Touch events for mobile (with passive: false to allow preventDefault)
         container.addEventListener('touchstart', this.touchStartHandler, { passive: false });
@@ -210,6 +239,7 @@ window.imageCropper = {
             this.containerElement.removeEventListener('mousedown', this.mouseDownHandler);
             document.removeEventListener('mousemove', this.mouseMoveHandler);
             document.removeEventListener('mouseup', this.mouseUpHandler);
+            this.containerElement.removeEventListener('wheel', this.wheelHandler);
             this.containerElement.removeEventListener('touchstart', this.touchStartHandler);
             document.removeEventListener('touchmove', this.touchMoveHandler);
             document.removeEventListener('touchend', this.touchEndHandler);
@@ -253,8 +283,8 @@ window.imageCropper = {
     // Handle touch start
     handleTouchStart: function(e) {
         if (e.touches.length === 1) {
+            // Single touch - dragging
             const target = e.target;
-            // Allow dragging from anywhere in the container
             if (target === this.containerElement || 
                 target === this.cropBoxElement || 
                 target === this.imageElement ||
@@ -262,30 +292,179 @@ window.imageCropper = {
                 const touch = e.touches[0];
                 const containerRect = this.containerElement.getBoundingClientRect();
                 this.isDragging = true;
+                this.isPinching = false;
                 this.dragStartX = touch.clientX - containerRect.left - this.imageOffsetX;
                 this.dragStartY = touch.clientY - containerRect.top - this.imageOffsetY;
                 e.preventDefault();
                 e.stopPropagation();
             }
+        } else if (e.touches.length === 2) {
+            // Two touches - pinch zoom
+            this.isDragging = false;
+            this.isPinching = true;
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            const distance = Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch1.clientY
+            );
+            this.initialPinchDistance = distance;
+            this.initialZoomLevel = this.zoomLevel;
+            
+            // Calculate pinch center
+            const containerRect = this.containerElement.getBoundingClientRect();
+            this.lastPinchCenterX = ((touch1.clientX + touch2.clientX) / 2) - containerRect.left;
+            this.lastPinchCenterY = ((touch1.clientY + touch2.clientY) / 2) - containerRect.top;
+            
+            e.preventDefault();
+            e.stopPropagation();
         }
     },
 
     // Handle touch move
     handleTouchMove: function(e) {
-        if (!this.isDragging || e.touches.length !== 1) return;
+        if (e.touches.length === 1 && this.isDragging && !this.isPinching) {
+            // Single touch dragging
+            const touch = e.touches[0];
+            const containerRect = this.containerElement.getBoundingClientRect();
+            const newX = touch.clientX - containerRect.left - this.dragStartX;
+            const newY = touch.clientY - containerRect.top - this.dragStartY;
 
-        const touch = e.touches[0];
-        const containerRect = this.containerElement.getBoundingClientRect();
-        const newX = touch.clientX - containerRect.left - this.dragStartX;
-        const newY = touch.clientY - containerRect.top - this.dragStartY;
-
-        this.constrainImagePosition(newX, newY);
-        e.preventDefault();
+            this.constrainImagePosition(newX, newY);
+            e.preventDefault();
+        } else if (e.touches.length === 2 && this.isPinching) {
+            // Two touches - pinch zoom
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            const distance = Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch1.clientY
+            );
+            
+            if (this.initialPinchDistance > 0) {
+                const scaleChange = distance / this.initialPinchDistance;
+                const newZoomLevel = this.initialZoomLevel * scaleChange;
+                
+                // Calculate pinch center
+                const containerRect = this.containerElement.getBoundingClientRect();
+                const pinchCenterX = ((touch1.clientX + touch2.clientX) / 2) - containerRect.left;
+                const pinchCenterY = ((touch1.clientY + touch2.clientY) / 2) - containerRect.top;
+                
+                this.applyZoom(newZoomLevel, pinchCenterX, pinchCenterY);
+            }
+            
+            e.preventDefault();
+        }
     },
 
     // Handle touch end
-    handleTouchEnd: function() {
-        this.isDragging = false;
+    handleTouchEnd: function(e) {
+        if (!e) {
+            this.isDragging = false;
+            this.isPinching = false;
+            this.initialPinchDistance = 0;
+            return;
+        }
+        
+        const remainingTouches = e.touches ? e.touches.length : 0;
+        
+        if (remainingTouches === 0) {
+            // All touches ended
+            this.isDragging = false;
+            this.isPinching = false;
+            this.initialPinchDistance = 0;
+        } else if (remainingTouches === 1) {
+            // One touch remaining - switch to drag mode
+            this.isPinching = false;
+            const touch = e.touches[0];
+            const containerRect = this.containerElement.getBoundingClientRect();
+            this.isDragging = true;
+            this.dragStartX = touch.clientX - containerRect.left - this.imageOffsetX;
+            this.dragStartY = touch.clientY - containerRect.top - this.imageOffsetY;
+        } else if (remainingTouches >= 2) {
+            // Still pinching
+            // Update pinch state if needed
+        }
+    },
+    
+    // Handle mouse wheel for zoom
+    handleWheel: function(e) {
+        if (!this.isReady) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Calculate zoom center (mouse position relative to container)
+        const containerRect = this.containerElement.getBoundingClientRect();
+        const zoomCenterX = e.clientX - containerRect.left;
+        const zoomCenterY = e.clientY - containerRect.top;
+        
+        // Determine zoom direction and amount
+        const zoomSpeed = 0.1;
+        const delta = e.deltaY > 0 ? -zoomSpeed : zoomSpeed;
+        const newZoomLevel = Math.max(
+            this.minZoom,
+            Math.min(this.maxZoom, this.zoomLevel + delta)
+        );
+        
+        if (newZoomLevel !== this.zoomLevel) {
+            this.applyZoom(newZoomLevel, zoomCenterX, zoomCenterY);
+        }
+    },
+    
+    // Apply zoom at a specific point
+    applyZoom: function(newZoomLevel, centerX, centerY) {
+        // Clamp zoom level
+        newZoomLevel = Math.max(this.minZoom, Math.min(this.maxZoom, newZoomLevel));
+        
+        if (newZoomLevel === this.zoomLevel) return;
+        
+        // Calculate the point in image coordinates before zoom
+        const oldScale = this.imageScale;
+        const imageX = (centerX - this.imageOffsetX) / oldScale;
+        const imageY = (centerY - this.imageOffsetY) / oldScale;
+        
+        // Update zoom level and scale
+        this.zoomLevel = newZoomLevel;
+        this.imageScale = this.baseScale * this.zoomLevel;
+        
+        // Calculate new offset to keep the same point under the cursor
+        const newScale = this.imageScale;
+        const newOffsetX = centerX - (imageX * newScale);
+        const newOffsetY = centerY - (imageY * newScale);
+        
+        // Apply constraints and update position
+        this.constrainImagePosition(newOffsetX, newOffsetY);
+    },
+    
+    // Zoom in
+    zoomIn: function() {
+        if (!this.isReady) return;
+        const containerRect = this.containerElement.getBoundingClientRect();
+        const centerX = containerRect.width / 2;
+        const centerY = containerRect.height / 2;
+        const newZoomLevel = Math.min(this.maxZoom, this.zoomLevel + 0.2);
+        this.applyZoom(newZoomLevel, centerX, centerY);
+    },
+    
+    // Zoom out
+    zoomOut: function() {
+        if (!this.isReady) return;
+        const containerRect = this.containerElement.getBoundingClientRect();
+        const centerX = containerRect.width / 2;
+        const centerY = containerRect.height / 2;
+        const newZoomLevel = Math.max(this.minZoom, this.zoomLevel - 0.2);
+        this.applyZoom(newZoomLevel, centerX, centerY);
+    },
+    
+    // Reset zoom
+    resetZoom: function() {
+        if (!this.isReady) return;
+        const containerRect = this.containerElement.getBoundingClientRect();
+        const centerX = containerRect.width / 2;
+        const centerY = containerRect.height / 2;
+        // Reset to minimum zoom (which ensures image covers crop area)
+        this.applyZoom(this.minZoom, centerX, centerY);
     },
 
     // Constrain image position to keep crop area filled
@@ -295,12 +474,27 @@ window.imageCropper = {
         const scaledWidth = this.imageElement.naturalWidth * this.imageScale;
         const scaledHeight = this.imageElement.naturalHeight * this.imageScale;
 
-        // Calculate bounds
-        const maxX = cropBoxRect.left - containerRect.left + this.cropSize;
-        const minX = cropBoxRect.left - containerRect.left - scaledWidth + this.cropSize;
-        const maxY = cropBoxRect.top - containerRect.top + this.cropSize;
-        const minY = cropBoxRect.top - containerRect.top - scaledHeight + this.cropSize;
+        // Calculate crop box position relative to container
+        const cropBoxLeft = cropBoxRect.left - containerRect.left;
+        const cropBoxTop = cropBoxRect.top - containerRect.top;
+        const cropBoxRight = cropBoxLeft + this.cropSize;
+        const cropBoxBottom = cropBoxTop + this.cropSize;
 
+        // Constraints to ensure crop area is always filled:
+        // - Image left edge must be <= crop box left edge (can't have empty space on left)
+        // - Image right edge must be >= crop box right edge (can't have empty space on right)
+        // - Image top edge must be <= crop box top edge (can't have empty space on top)
+        // - Image bottom edge must be >= crop box bottom edge (can't have empty space on bottom)
+        
+        // X constraints: imageOffsetX is the left edge of the image
+        const minX = cropBoxRight - scaledWidth; // Right edge of image must be at least at crop box right
+        const maxX = cropBoxLeft; // Left edge of image can't be to the right of crop box left
+        
+        // Y constraints: imageOffsetY is the top edge of the image
+        const minY = cropBoxBottom - scaledHeight; // Bottom edge of image must be at least at crop box bottom
+        const maxY = cropBoxTop; // Top edge of image can't be below crop box top
+
+        // Apply constraints
         this.imageOffsetX = Math.max(minX, Math.min(maxX, newX));
         this.imageOffsetY = Math.max(minY, Math.min(maxY, newY));
 
@@ -436,10 +630,15 @@ window.imageCropper = {
     // Reset cropper
     reset: function() {
         this.isDragging = false;
+        this.isPinching = false;
         this.imageOffsetX = 0;
         this.imageOffsetY = 0;
+        this.baseScale = 1;
+        this.zoomLevel = 1;
         this.imageScale = 1;
+        this.minZoom = 1;
         this.isReady = false;
+        this.initialPinchDistance = 0;
         this.removeEventListeners();
         if (this.imageElement) {
             this.imageElement.src = '';
