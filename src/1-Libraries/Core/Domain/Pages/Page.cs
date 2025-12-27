@@ -109,7 +109,7 @@ public sealed class Page : AggregateRoot
 
         // Check if contact with same content already exists
         if (Contacts.Any(c => c.Content == content))
-            throw PageDomainExceptions.ContactAlreadyExists();
+            return Contacts.FirstOrDefault(c => c.Content == content);
 
         Contacts.Add(contact);
 

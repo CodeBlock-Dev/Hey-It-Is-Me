@@ -64,11 +64,21 @@
 @code {
     [Parameter] public string PageId { get; set; }
     [Parameter] public EventCallback OnNext { get; set; }
-    
+
     private List<string> Contacts = new List<string> { "" };
     private bool IsLoading = false;
     private bool ShowTips = false;
-    
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var page = await PageService.GetPage(PageId);
+        if (page.Value.Contacts != null && page.Value.Contacts.Any())
+        {
+            Contacts = page.Value.Contacts.Select(c => c.Content).ToList();
+        }
+    }
+
     private void ToggleTips()
     {
         ShowTips = !ShowTips;
