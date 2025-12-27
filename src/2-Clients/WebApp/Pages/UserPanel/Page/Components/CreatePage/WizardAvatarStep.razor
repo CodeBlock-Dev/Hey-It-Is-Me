@@ -1,4 +1,6 @@
 @using HeyItIsMe.Application.Services.Pages
+@using Microsoft.JSInterop
+@using System.Threading
 
 <div class="wizard-step">
     <div class="text-center mb-4">
@@ -37,15 +39,43 @@
     </div>
 </div>
 
-<ImageCropper ShowCropper="@ShowCropper" 
-              ImageDataUrl="@SelectedImageDataUrl" 
-              OnCropComplete="HandleCropComplete" 
-              OnCancel="HandleCropCancel" />
+@if (ShowCropper)
+{
+    <div class="image-cropper-modal" @onclick="HandleBackdropClick">
+        <div class="image-cropper-content" @onclick:stopPropagation="true">
+            <div class="image-cropper-header">
+                <h4>Crop Your Image</h4>
+                <p class="text-muted mb-0">Drag the image to position it within the 1:1 crop area</p>
+            </div>
+            
+            <div class="image-cropper-container" id="@ContainerId">
+                <img id="@ImageId" class="image-cropper-image" src="@SelectedImageDataUrl" alt="Crop preview" />
+                <div class="image-cropper-crop-box" id="@CropBoxId"></div>
+            </div>
+            
+            <div class="image-cropper-actions">
+                <button class="btn btn-outline-secondary" @onclick="HandleCropCancel" disabled="@IsProcessing">
+                    Cancel
+                </button>
+                <button class="btn btn-primary" @onclick="HandleCrop" disabled="@IsProcessing">
+                    @if (IsProcessing)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    <i class="bi bi-check-lg me-2"></i>
+                    Apply Crop
+                </button>
+            </div>
+        </div>
+    </div>
+}
 
 
 @code {
     [Parameter] public string PageId { get; set; }
     [Parameter] public EventCallback OnNext { get; set; }
+    
+    [Inject] private IJSRuntime JSRuntime { get; set; }
     
     private string AvatarBase64;
     private string AvatarPreview;
@@ -53,6 +83,37 @@
     private bool ShowCropper = false;
     private string SelectedImageDataUrl;
     private string SelectedImageContentType;
+    
+    // ImageCropper fields
+    private string ContainerId = $"cropper-container-{Guid.NewGuid():N}";
+    private string ImageId = $"cropper-image-{Guid.NewGuid():N}";
+    private string CropBoxId = $"cropper-box-{Guid.NewGuid():N}";
+    private bool IsProcessing = false;
+    private bool IsInitialized = false;
+    private string PreviousImageDataUrl;
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (ShowCropper && !string.IsNullOrEmpty(SelectedImageDataUrl))
+        {
+            // Check if image changed or needs initialization
+            if (!IsInitialized || PreviousImageDataUrl != SelectedImageDataUrl)
+            {
+                // Small delay to ensure DOM is ready
+                await Task.Delay(50);
+                await JSRuntime.InvokeVoidAsync("imageCropper.initialize", SelectedImageDataUrl, ContainerId, ImageId, CropBoxId);
+                IsInitialized = true;
+                PreviousImageDataUrl = SelectedImageDataUrl;
+            }
+        }
+        else if (!ShowCropper && IsInitialized)
+        {
+            // Reset when cropper is hidden
+            IsInitialized = false;
+            PreviousImageDataUrl = null;
+            await JSRuntime.InvokeVoidAsync("imageCropper.reset");
+        }
+    }
     
     private async Task OnAvatarFileSelected(InputFileChangeEventArgs e)
     {
@@ -86,22 +147,93 @@
             StateHasChanged();
         }
     }
-    
-    private async Task HandleCropComplete(string croppedBase64)
+    private async Task HandleCrop()
     {
-        AvatarBase64 = croppedBase64;
-        // Use JPEG since the cropper returns JPEG format
-        AvatarPreview = $"data:image/jpeg;base64,{croppedBase64}";
+        IsProcessing = true;
+        StateHasChanged();
+
+        try
+        {
+            // --- Wait for cropper readiness ---
+            var maxWaitTime = DateTime.UtcNow.AddSeconds(5);
+            bool isReady = false;
+            int attempts = 0;
+
+            while (DateTime.UtcNow < maxWaitTime && !isReady && attempts < 50)
+            {
+                try
+                {
+                    isReady = await JSRuntime.InvokeAsync<bool>("imageCropper.checkReady");
+                    if (isReady)
+                        break;
+                }
+                catch (JSException)
+                {
+                    // Continue retrying
+                }
+
+                await Task.Delay(100);
+                attempts++;
+            }
+
+            if (!isReady)
+                throw new Exception("Cropper not ready after waiting");
+
+            // --- Call JS and receive Blob as stream ---
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+
+            var streamRef = await JSRuntime.InvokeAsync<IJSStreamReference>(
+                "imageCropper.getCroppedImage",
+                cts.Token
+            );
+
+            if (streamRef is null)
+                throw new Exception("Failed to receive image stream from JS");
+
+            await using var stream = await streamRef.OpenReadStreamAsync(
+                maxAllowedSize: 2 * 1024 * 1024, // 2MB safety cap
+                cancellationToken: cts.Token
+            );
+
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms, cts.Token);
+
+            var imageBytes = ms.ToArray();
+
+            if (imageBytes.Length == 0)
+                throw new Exception("Cropped image stream was empty");
+
+            // --- Convert to Base64 (only on server side) ---
+            AvatarBase64 = Convert.ToBase64String(imageBytes);
+
+            // --- Preview (JPEG enforced by cropper) ---
+            AvatarPreview = $"data:image/jpeg;base64,{AvatarBase64}";
+
+            // --- UI cleanup ---
+            ShowCropper = false;
+            SelectedImageDataUrl = null;
+
+            await JSRuntime.InvokeVoidAsync("imageCropper.reset");
+        }
+        finally
+        {
+            IsProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    
+    private async Task HandleCropCancel()
+    {
+        await JSRuntime.InvokeVoidAsync("imageCropper.reset");
         ShowCropper = false;
         SelectedImageDataUrl = null;
         StateHasChanged();
     }
     
-    private async Task HandleCropCancel()
+    private async Task HandleBackdropClick()
     {
-        ShowCropper = false;
-        SelectedImageDataUrl = null;
-        StateHasChanged();
+        await HandleCropCancel();
     }
     
     private async Task HandleUpdateAvatar()
