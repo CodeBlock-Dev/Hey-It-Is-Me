@@ -1,6 +1,6 @@
 <div class="wizard-step">
     <div class="text-center mb-4">
-        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+        <i class="bi bi-check-circle-fill text-success"></i>
         <h2 class="mt-3 mb-3 text-success">Congratulations!</h2>
         <p class="lead text-muted">Your fact page has been created successfully!</p>
     </div>
@@ -8,15 +8,25 @@
     <div class="completion-card mb-4">
         <div class="card">
             <div class="card-body text-center">
-                <h5 class="card-title">Your Page is Ready!</h5>
-                <p class="card-text">Share your personalized fact page with the world:</p>
-                <div class="page-link-container">
-                    <a href="@PageUrl" target="_blank" class="btn btn-primary btn-lg">
-                        <i class="bi bi-box-arrow-up-right me-2"></i>View Your Page
-                    </a>
+                <div class="page-url-box mb-3">
+                    <input type="text" class="form-control form-control-lg" value="@PageUrl" readonly id="pageUrlInput" />
                 </div>
-                <div class="mt-3">
-                    <small class="text-muted">@PageUrl</small>
+                <div class="action-buttons d-flex flex-nowrap gap-2 justify-content-center">
+                    <button class="btn btn-primary flex-fill" type="button" @onclick="CopyToClipboard">
+                        @if (_isCopied)
+                        {
+                            <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                            <span>Copied!</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-clipboard me-2"></i>
+                            <span>Copy URL</span>
+                        }
+                    </button>
+                    <button class="btn btn-warning flex-fill" @onclick="ViewPage">
+                        <i class="bi bi-box-arrow-up-right me-2"></i>View Your Page
+                    </button>
                 </div>
             </div>
         </div>
@@ -29,7 +39,7 @@
                 <i class="bi bi-share me-3 text-primary"></i>
                 <div>
                     <strong>Share your page</strong>
-                    <small class="d-block text-muted">Send the link to friends, family, or post it on social media</small>
+                    <small class="d-block text-muted">Copy your page URL and add it to your bio on Instagram, Twitter, WhatsApp, TikTok, Telegram, and other social media platforms</small>
                 </div>
             </div>
             <div class="list-group-item d-flex align-items-center">
@@ -37,13 +47,6 @@
                 <div>
                     <strong>Customize in dashboard</strong>
                     <small class="d-block text-muted">Add more facts, update contacts, or change your images anytime</small>
-                </div>
-            </div>
-            <div class="list-group-item d-flex align-items-center">
-                <i class="bi bi-plus-circle me-3 text-primary"></i>
-                <div>
-                    <strong>Keep it fresh</strong>
-                    <small class="d-block text-muted">Regularly update your page with new facts and information</small>
                 </div>
             </div>
         </div>
@@ -58,4 +61,40 @@
 
 @code {
     [Parameter] public string PageUrl { get; set; } = "";
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    
+    private bool _isCopied = false;
+    
+    private async Task CopyToClipboard()
+    {
+        if (string.IsNullOrEmpty(PageUrl))
+            return;
+            
+        try
+        {
+            var success = await JSRuntime.InvokeAsync<bool>("createPageWizard.copyToClipboard", PageUrl);
+            if (success)
+            {
+                _isCopied = true;
+                StateHasChanged();
+                // Reset the copied state after 2 seconds
+                await Task.Delay(2000);
+                _isCopied = false;
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            // Handle error silently or show a message
+        }
+    }
+    
+    private async Task ViewPage()
+    {
+        if (!string.IsNullOrEmpty(PageUrl))
+        {
+            await JSRuntime.InvokeVoidAsync("window.open", PageUrl, "_blank");
+        }
+    }
 }

@@ -4,7 +4,7 @@
 
 <div class="wizard-step">
     <div class="text-center mb-4">
-        <i class="bi bi-camera text-primary" style="font-size: 2.5rem;"></i>
+        <i class="bi bi-camera text-primary"></i>
         <h3 class="mt-3 mb-3">Upload Your Avatar</h3>
         <p class="text-muted">Your avatar will be displayed on your page and used to generate personalized facts</p>
     </div>
@@ -12,15 +12,36 @@
     <div class="form-group mb-4">
         <label class="form-label fw-bold">Profile Picture</label>
         <InputFile OnChange="@OnAvatarFileSelected" accept="image/*" class="form-control" />
-        @if (AvatarPreview != null)
-        {
-            <div class="mt-3">
-                <img src="@AvatarPreview" alt="Avatar preview" style="max-width: 200px; max-height: 200px; border-radius: 8px;" />
+        
+        <div class="image-preview-container">
+            <div class="image-preview-box @(AvatarPreview != null ? "has-image" : "")">
+                @if (AvatarPreview != null)
+                {
+                    <img src="@AvatarPreview" alt="Avatar preview" />
+                }
+                else
+                {
+                    <div class="preview-placeholder">
+                        <i class="bi bi-image"></i>
+                        <div>Preview</div>
+                    </div>
+                }
             </div>
-        }
-        <div class="form-text">
-            <i class="bi bi-info-circle me-1"></i>
-            <strong>Important:</strong> Please upload a clear profile picture showing only your face (not your full body). This will be displayed on your page and used by AI to generate personalized facts. A well-lit, front-facing photo where your face is clearly visible works best.
+        </div>
+        
+        <div class="tips-section">
+            <div class="tips-toggle @(ShowTips ? "expanded" : "")" @onclick="ToggleTips">
+                <span>
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Tips for best results</strong>
+                </span>
+                <i class="bi bi-chevron-down"></i>
+            </div>
+            <div class="tips-content @(ShowTips ? "expanded" : "")">
+                <div class="form-text">
+                    <strong>Important:</strong> Please upload a clear profile picture showing only your face (not your full body). This will be displayed on your page and used by AI to generate personalized facts. A well-lit, front-facing photo where your face is clearly visible works best.
+                </div>
+            </div>
         </div>
     </div>
     
@@ -91,6 +112,12 @@
     private bool IsProcessing = false;
     private bool IsInitialized = false;
     private string PreviousImageDataUrl;
+    private bool ShowTips = false;
+    
+    private void ToggleTips()
+    {
+        ShowTips = !ShowTips;
+    }
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -237,10 +264,10 @@
     }
     
     private async Task HandleUpdateAvatar()
-    {
-        if (AvatarBase64 == null || string.IsNullOrWhiteSpace(PageId))
+    {   
+        if (string.IsNullOrWhiteSpace(PageId))
             return;
-            
+
         IsLoading = true;
         var result = await PageService.UpdatePageAvatarImage(PageId, AvatarBase64);
         if (result.IsSuccess)

@@ -15,8 +15,6 @@
 
                     @if (!IsInitializing)
                     {
-                        <WizardProgressBar CurrentStep="@CurrentStep" ProgressPercentage="@GetProgressPercentage()" />
-
                         <div class="wizard-content">
                         @if (CurrentStep == 0)
                         {
@@ -100,11 +98,11 @@
                 var page = pageResult.Value;
                 
                 // If page is completed, redirect to dashboard
-                if (page.State == PageState.Completed)
-                {
-                    Navigation.NavigateTo("/dashboard");
-                    return;
-                }
+                // if (page.State == PageState.Completed)
+                // {
+                //     Navigation.NavigateTo("/dashboard");
+                //     return;
+                // }
                 
                 // Set page data and navigate to appropriate step
                 PageId = page.Id;
@@ -118,17 +116,13 @@
                     PageState.PendingAvatar => 3, // Avatar step
                     PageState.PendingReferenceImage => 4, // Reference image step
                     PageState.PendingQuestions => 6, // Questions step (skip contacts)
+                    PageState.Completed => 7, // Questions step (skip contacts)
                     _ => 0 // Default to intro
                 };
             }
         }
         
         IsInitializing = false;
-    }
-    
-    private double GetProgressPercentage()
-    {
-        return CurrentStep * 100.0 / 7.0;
     }
     
     private void NextStep()

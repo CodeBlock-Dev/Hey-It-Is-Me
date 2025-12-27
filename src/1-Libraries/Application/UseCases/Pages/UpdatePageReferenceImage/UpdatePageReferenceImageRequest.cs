@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using CodeBlock.DevKit.Application.Commands;
+using CodeBlock.DevKit.Core.Resources;
 using HeyItIsMe.Core.Resources;
 
 namespace HeyItIsMe.Application.UseCases.Pages.UpdatePageReferenceImage;
@@ -15,6 +16,6 @@ internal class UpdatePageReferenceImageRequest : BaseCommand
     public string Id { get; }
 
     [Display(Name = nameof(SharedResource.Page_ReferenceImage), ResourceType = typeof(SharedResource))]
-    [Required(ErrorMessageResourceName = nameof(SharedResource.Page_ReferenceImage), ErrorMessageResourceType = typeof(SharedResource))]
+    [Required(ErrorMessageResourceName = nameof(CoreResource.Required), ErrorMessageResourceType = typeof(CoreResource))]
     public string Base64Image { get; }
 }

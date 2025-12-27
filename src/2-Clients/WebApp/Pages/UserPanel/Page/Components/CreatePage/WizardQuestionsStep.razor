@@ -1,6 +1,6 @@
 <div class="wizard-step">
     <div class="text-center mb-4">
-        <i class="bi bi-question-circle text-primary" style="font-size: 2.5rem;"></i>
+        <i class="bi bi-question-circle text-primary"></i>
         <h3 class="mt-3 mb-3">Answer Questions</h3>
         <p class="text-muted">Help us create amazing facts about you</p>
     </div>
@@ -147,7 +147,7 @@
     
     private async Task HandleNextQuestion()
     {
-        if (CurrentQuestion == null || string.IsNullOrWhiteSpace(CurrentAnswer) || IsLoading)
+        if (CurrentQuestion == null || IsLoading)
             return;
             
         // Generate fact and only proceed if successful
@@ -225,7 +225,7 @@
     
     private async Task<bool> GenerateFactForCurrentQuestion()
     {
-        if (CurrentQuestion == null || string.IsNullOrWhiteSpace(CurrentAnswer) || string.IsNullOrWhiteSpace(PageId))
+        if (CurrentQuestion == null || string.IsNullOrWhiteSpace(PageId))
             return false;
             
         IsLoading = true;

@@ -1,7 +1,7 @@
 
 <div class="wizard-step">
     <div class="text-center mb-4">
-        <i class="bi bi-person text-primary" style="font-size: 2.5rem;"></i>
+        <i class="bi bi-person text-primary"></i>
         <h3 class="mt-3 mb-3">What's Your Display Name?</h3>
         <p class="text-muted">This is how visitors will see your name on the page</p>
     </div>
@@ -9,9 +9,19 @@
     <div class="form-group mb-4">
         <label class="form-label fw-bold">Display Name</label>
         <input type="text" class="form-control" @bind="DisplayName" @bind:event="oninput" placeholder="Alex Johnson" />
-        <div class="form-text">
-            <i class="bi bi-info-circle me-1"></i>
-            You can use your full name, first name, nickname, or any name you prefer.
+        <div class="tips-section">
+            <div class="tips-toggle @(ShowTips ? "expanded" : "")" @onclick="ToggleTips">
+                <span>
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Tips</strong>
+                </span>
+                <i class="bi bi-chevron-down"></i>
+            </div>
+            <div class="tips-content @(ShowTips ? "expanded" : "")">
+                <div class="form-text">
+                    You can use your full name, first name, nickname, or any name you prefer.
+                </div>
+            </div>
         </div>
     </div>
     
@@ -36,10 +46,16 @@
     
     private string DisplayName = "";
     private bool IsLoading = false;
+    private bool ShowTips = false;
+    
+    private void ToggleTips()
+    {
+        ShowTips = !ShowTips;
+    }
     
     private async Task HandleUpdateDisplayName()
     {
-        if (string.IsNullOrWhiteSpace(DisplayName) || string.IsNullOrWhiteSpace(PageId))
+        if (string.IsNullOrWhiteSpace(PageId))
             return;
             
         IsLoading = true;
