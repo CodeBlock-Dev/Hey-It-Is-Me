@@ -48,7 +48,8 @@
                         else if (CurrentStep == 6)
                         {
                             <WizardQuestionsStep PageId="@PageId"
-                                               OnComplete="NextStep" />
+                                               OnComplete="NextStep"
+                                               OnChangeReferenceImage="HandleChangeReferenceImage" />
                         }
                         else if (CurrentStep == 7)
                         {
@@ -139,6 +140,12 @@
         PageId = "";
         PageRoute = "";
         PageUrl = "";
+    }
+    
+    private void HandleChangeReferenceImage()
+    {
+        // Navigate back to reference image step (step 4)
+        CurrentStep = 4;
     }
     
     protected override async Task OnAfterRenderAsync(bool firstRender)

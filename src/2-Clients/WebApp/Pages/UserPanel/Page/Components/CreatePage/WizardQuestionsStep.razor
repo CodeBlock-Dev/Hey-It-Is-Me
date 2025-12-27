@@ -33,6 +33,14 @@
             </div>
         }
         
+        @if (ShowReferenceImageWarning)
+        {
+            <div class="alert alert-warning mb-3" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Warning:</strong> The AI model cannot process your reference image for some reason. Please try another image as reference.
+            </div>
+        }
+        
         <div class="d-flex justify-content-between">
             <button class="btn btn-outline-secondary" @onclick="HandleSkipQuestion" disabled="@IsLoading">
                 <i class="bi bi-skip-forward me-2"></i>Skip
@@ -40,11 +48,21 @@
             <div>
                 @if (CurrentQuestionIndex < Questions.Count() - 1)
                 {
-                    <button class="btn btn-primary" @onclick="HandleNextQuestion" disabled="@IsLoading">
+                    <button class="btn @(ShouldShowChangeReferenceImageButton ? "btn-warning" : "btn-primary")" @onclick="HandleNextQuestion" disabled="@IsLoading">
                         @if (IsLoading)
                         {
                             <span class="spinner-border spinner-border-sm me-2"></span>
                             <span>Generating fact...</span>
+                        }
+                        else if (ShouldShowChangeReferenceImageButton)
+                        {
+                            <i class="bi bi-image me-2"></i>
+                            <span>Change Reference Image</span>
+                        }
+                        else if (RetryAttempts > 0)
+                        {
+                            <i class="bi bi-arrow-clockwise me-2"></i>
+                            <span>Retry</span>
                         }
                         else
                         {
@@ -55,11 +73,21 @@
                 }
                 else
                 {
-                    <button class="btn btn-success" @onclick="HandleComplete" disabled="@IsLoading">
+                    <button class="btn @(ShouldShowChangeReferenceImageButton ? "btn-warning" : "btn-success")" @onclick="HandleComplete" disabled="@IsLoading">
                         @if (IsLoading)
                         {
                             <span class="spinner-border spinner-border-sm me-2"></span>
                             <span>Generating fact...</span>
+                        }
+                        else if (ShouldShowChangeReferenceImageButton)
+                        {
+                            <i class="bi bi-image me-2"></i>
+                            <span>Change Reference Image</span>
+                        }
+                        else if (RetryAttempts > 0)
+                        {
+                            <i class="bi bi-arrow-clockwise me-2"></i>
+                            <span>Retry</span>
                         }
                         else
                         {
@@ -86,18 +114,27 @@
 @code {
     [Parameter] public string PageId { get; set; }
     [Parameter] public EventCallback OnComplete { get; set; }
+    [Parameter] public EventCallback OnChangeReferenceImage { get; set; }
     
     private IEnumerable<GetQuestionDto> Questions;
     private int CurrentQuestionIndex = 0;
     private string CurrentAnswer = "";
     private bool IsLoading = false;
     private bool IsLoadingQuestions = false;
+    private int RetryAttempts = 0;
+    private const int MaxRetryAttempts = 2;
+    private bool ShowReferenceImageWarning = false;
     
     private GetQuestionDto CurrentQuestion => Questions?.ElementAtOrDefault(CurrentQuestionIndex);
+    
+    private bool ShouldShowChangeReferenceImageButton => RetryAttempts >= MaxRetryAttempts;
     
     protected override async Task OnInitializedAsync()
     {
         await LoadQuestions();
+        // Reset retry state when component initializes
+        RetryAttempts = 0;
+        ShowReferenceImageWarning = false;
     }
     
     private async Task LoadQuestions(bool resetIndex = true)
@@ -111,6 +148,9 @@
             {
                 CurrentQuestionIndex = 0;
                 CurrentAnswer = "";
+                // Reset retry state when loading new questions
+                RetryAttempts = 0;
+                ShowReferenceImageWarning = false;
             }
         }
         else
@@ -126,6 +166,10 @@
     {
         if (CurrentQuestion == null || IsLoading)
             return;
+        
+        // Reset retry attempts when skipping
+        RetryAttempts = 0;
+        ShowReferenceImageWarning = false;
         
         // If we're on the last question, skip should complete the wizard
         if (IsLastQuestion)
@@ -149,14 +193,31 @@
     {
         if (CurrentQuestion == null || IsLoading)
             return;
+        
+        // If retries exhausted, navigate to reference image step
+        if (ShouldShowChangeReferenceImageButton)
+        {
+            await HandleChangeReferenceImage();
+            return;
+        }
             
         // Generate fact and only proceed if successful
         var success = await GenerateFactForCurrentQuestion();
         if (!success)
         {
+            // Increment retry attempts on failure
+            RetryAttempts++;
+            if (RetryAttempts >= MaxRetryAttempts)
+            {
+                ShowReferenceImageWarning = true;
+            }
             // Don't proceed if fact generation failed
             return;
         }
+        
+        // Reset retry attempts on success
+        RetryAttempts = 0;
+        ShowReferenceImageWarning = false;
         
         // Move to next question after successful fact generation
         CurrentQuestionIndex++;
@@ -173,14 +234,31 @@
     {
         if (CurrentQuestion == null || string.IsNullOrWhiteSpace(CurrentAnswer) || IsLoading)
             return;
+        
+        // If retries exhausted, navigate to reference image step
+        if (ShouldShowChangeReferenceImageButton)
+        {
+            await HandleChangeReferenceImage();
+            return;
+        }
             
         // Generate fact and only proceed if successful
         var success = await GenerateFactForCurrentQuestion();
         if (!success)
         {
+            // Increment retry attempts on failure
+            RetryAttempts++;
+            if (RetryAttempts >= MaxRetryAttempts)
+            {
+                ShowReferenceImageWarning = true;
+            }
             // Don't proceed if fact generation failed
             return;
         }
+        
+        // Reset retry attempts on success
+        RetryAttempts = 0;
+        ShowReferenceImageWarning = false;
         
         // We're on the last question and fact was generated successfully, complete the wizard
         await CompleteWizard();
@@ -220,6 +298,9 @@
             // There are more questions available, reset to first question
             CurrentQuestionIndex = 0;
             CurrentAnswer = "";
+            // Reset retry attempts when moving to new set of questions
+            RetryAttempts = 0;
+            ShowReferenceImageWarning = false;
         }
     }
     
@@ -234,7 +315,12 @@
             var result = await FactService.GenerateFact(PageId, CurrentQuestion.Id, CurrentAnswer);
             if (!result.IsSuccess)
             {
-                result.ShowErrorToast(ToastService);
+                // Only show error toast if we haven't exhausted retries
+                // When retries are exhausted, we'll show the warning message instead
+                if (RetryAttempts < MaxRetryAttempts)
+                {
+                    result.ShowErrorToast(ToastService);
+                }
                 return false;
             }
             return true;
@@ -243,5 +329,22 @@
         {
             IsLoading = false;
         }
+    }
+    
+    private async Task HandleChangeReferenceImage()
+    {
+        if (string.IsNullOrWhiteSpace(PageId))
+            return;
+        
+        // Update page state to PendingReferenceImage
+        var stateResult = await PageService.UpdatePageState(PageId, Core.Domain.Pages.PageState.PendingReferenceImage);
+        if (!stateResult.IsSuccess)
+        {
+            stateResult.ShowErrorToast(ToastService);
+            return;
+        }
+        
+        // Navigate back to reference image step
+        await OnChangeReferenceImage.InvokeAsync();
     }
 }
