@@ -6,6 +6,7 @@
 @inject IJSRuntime JSRuntime
 @inject ISubscriptionService SubscriptionService
 @implements IDisposable
+@inject ApplicationSettings ApplicationSettings
 
 <div class="create-page-wizard">
     <div class="container-fluid">
@@ -97,17 +98,10 @@
             {
                 var page = pageResult.Value;
                 
-                // If page is completed, redirect to dashboard
-                // if (page.State == PageState.Completed)
-                // {
-                //     Navigation.NavigateTo("/dashboard");
-                //     return;
-                // }
-                
                 // Set page data and navigate to appropriate step
                 PageId = page.Id;
                 PageRoute = page.Route;
-                PageUrl = $"https://hey-it-is.me/{PageRoute}";
+                PageUrl = $"{ApplicationSettings.Localized.Url}{PageRoute}";
                 
                 // Map state to step
                 CurrentStep = page.State switch
